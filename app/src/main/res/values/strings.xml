@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Personal Wallet</string>
+
+    <!-- Google Sign-In Configuration -->
+    <!-- To enable Google Sign-In, create a project in Google Cloud Console and add your web client ID here -->
+    <!-- For now, this is a placeholder - the app will work in Guest mode -->
+    <string name="default_web_client_id" translatable="false">YOUR_WEB_CLIENT_ID_HERE</string>
+</resources>
