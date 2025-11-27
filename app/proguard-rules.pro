@@ -137,3 +137,43 @@
     java.lang.Object writeReplace();
     java.lang.Object readResolve();
 }
+
+# ===================================
+# SQLCipher Database Encryption
+# ===================================
+-keep class net.sqlcipher.** { *; }
+-keep class net.sqlcipher.database.** { *; }
+-dontwarn net.sqlcipher.**
+
+# ===================================
+# Optimization Settings
+# ===================================
+-optimizationpasses 5
+-allowaccessmodification
+-repackageclasses
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+
+# ===================================
+# ViewModels
+# ===================================
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>();
+}
+-keep class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(android.app.Application);
+}
+
+# ===================================
+# Navigation
+# ===================================
+-keep class androidx.navigation.** { *; }
+-keepnames class androidx.navigation.fragment.NavHostFragment
+
+# ===================================
+# Additional Warnings to Ignore
+# ===================================
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
+-dontwarn edu.umd.cs.findbugs.annotations.**
+-dontwarn javax.annotation.**
