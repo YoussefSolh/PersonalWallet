@@ -10,8 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -65,11 +69,45 @@ fun LoginScreen(
     }
 
     // Navigate on successful login
-    LaunchedEffect(uiState.isSignedIn) {
-        if (uiState.isSignedIn) {
+    LaunchedEffect(uiState.isSignedIn, uiState.showRestorePrompt, uiState.isCheckingBackups, uiState.isRestoring) {
+        if (uiState.isSignedIn && !uiState.showRestorePrompt && !uiState.isCheckingBackups && !uiState.isRestoring) {
             onLoginSuccess()
         }
     }
+
+    // Restore backup dialog
+    val availableBackups = uiState.availableBackups
+    if (uiState.showRestorePrompt && availableBackups != null) {
+        RestoreBackupDialog(
+            backups = availableBackups,
+            onRestore = { backupId ->
+                viewModel.restoreFromBackup(backupId)
+            },
+            onDismiss = {
+                viewModel.dismissRestorePrompt()
+            }
+        )
+    }
+
+    // Show loading overlay when restoring
+    if (uiState.isRestoring) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Restoring Backup") },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Please wait while we restore your data...")
+                }
+            },
+            confirmButton = { }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -156,4 +194,93 @@ fun LoginScreen(
             Text("Continue as Guest")
         }
     }
+}
+
+@Composable
+private fun RestoreBackupDialog(
+    backups: List<com.youssefsolh.personalwallet.domain.repository.DriveBackupInfo>,
+    onRestore: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault()) }
+    val mostRecentBackup = backups.maxByOrNull { it.timestamp }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Backup Found!",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "We found ${backups.size} backup${if (backups.size > 1) "s" else ""} in your Google Drive.",
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (mostRecentBackup != null) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = "Most Recent Backup:",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = dateFormat.format(Date(mostRecentBackup.timestamp)),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${mostRecentBackup.size / 1024} KB",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Would you like to restore your data from this backup?",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    mostRecentBackup?.let { onRestore(it.id) }
+                }
+            ) {
+                Text("Restore")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Not Now")
+            }
+        }
+    )
 }

@@ -6,17 +6,17 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
-    @Query("SELECT * FROM categories WHERE isDeleted = 0 ORDER BY isDefault DESC, name ASC")
-    fun getAllCategories(): Flow<List<CategoryEntity>>
+    @Query("SELECT * FROM categories WHERE (userId = :userId OR userId = 'default') AND isDeleted = 0 ORDER BY isDefault DESC, name ASC")
+    fun getAllCategories(userId: String): Flow<List<CategoryEntity>>
 
-    @Query("SELECT * FROM categories WHERE type = :type AND isDeleted = 0 ORDER BY isDefault DESC, name ASC")
-    fun getCategoriesByType(type: String): Flow<List<CategoryEntity>>
+    @Query("SELECT * FROM categories WHERE (userId = :userId OR userId = 'default') AND type = :type AND isDeleted = 0 ORDER BY isDefault DESC, name ASC")
+    fun getCategoriesByType(userId: String, type: String): Flow<List<CategoryEntity>>
 
-    @Query("SELECT * FROM categories WHERE id = :id AND isDeleted = 0")
-    suspend fun getCategoryById(id: String): CategoryEntity?
+    @Query("SELECT * FROM categories WHERE (userId = :userId OR userId = 'default') AND id = :id AND isDeleted = 0")
+    suspend fun getCategoryById(userId: String, id: String): CategoryEntity?
 
-    @Query("SELECT * FROM categories WHERE isDefault = 1 AND isDeleted = 0")
-    suspend fun getDefaultCategories(): List<CategoryEntity>
+    @Query("SELECT * FROM categories WHERE (userId = :userId OR userId = 'default') AND isDefault = 1 AND isDeleted = 0")
+    suspend fun getDefaultCategories(userId: String): List<CategoryEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: CategoryEntity)

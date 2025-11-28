@@ -9,6 +9,7 @@ import com.youssefsolh.personalwallet.domain.model.TransactionType
 data class CategoryEntity(
     @PrimaryKey
     val id: String,
+    val userId: String,  // User ID for data isolation
     val name: String,
     val icon: String,
     val color: String,
@@ -35,9 +36,10 @@ fun CategoryEntity.toDomain(): Category {
     )
 }
 
-fun Category.toEntity(): CategoryEntity {
+fun Category.toEntity(userId: String): CategoryEntity {
     return CategoryEntity(
         id = id,
+        userId = userId,
         name = name,
         icon = icon,
         color = color,

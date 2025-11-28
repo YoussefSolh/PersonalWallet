@@ -1,5 +1,6 @@
 package com.youssefsolh.personalwallet.data.repository
 
+import com.youssefsolh.personalwallet.data.local.CurrentUserProvider
 import com.youssefsolh.personalwallet.data.local.dao.WalletDao
 import com.youssefsolh.personalwallet.data.local.entity.toDomain
 import com.youssefsolh.personalwallet.data.local.entity.toEntity
@@ -13,25 +14,30 @@ import javax.inject.Singleton
 
 @Singleton
 class WalletRepositoryImpl @Inject constructor(
-    private val walletDao: WalletDao
+    private val walletDao: WalletDao,
+    private val currentUserProvider: CurrentUserProvider
 ) : WalletRepository {
 
     override suspend fun getAllWallets(): Flow<List<Wallet>> {
-        return walletDao.getAllWallets().map { entities ->
+        val userId = currentUserProvider.getCurrentUserId()
+        return walletDao.getAllWallets(userId).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
     override suspend fun getWalletById(id: String): Wallet? {
-        return walletDao.getWalletById(id)?.toDomain()
+        val userId = currentUserProvider.getCurrentUserId()
+        return walletDao.getWalletById(id, userId)?.toDomain()
     }
 
     override suspend fun insertWallet(wallet: Wallet) {
-        walletDao.insertWallet(wallet.toEntity())
+        val userId = currentUserProvider.getCurrentUserId()
+        walletDao.insertWallet(wallet.toEntity(userId))
     }
 
     override suspend fun updateWallet(wallet: Wallet) {
-        walletDao.updateWallet(wallet.toEntity())
+        val userId = currentUserProvider.getCurrentUserId()
+        walletDao.updateWallet(wallet.toEntity(userId))
     }
 
     override suspend fun deleteWallet(id: String) {
@@ -39,7 +45,8 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getWalletBalance(id: String): Flow<BigDecimal> {
-        return walletDao.getWalletBalance(id).map { balanceString ->
+        val userId = currentUserProvider.getCurrentUserId()
+        return walletDao.getWalletBalance(id, userId).map { balanceString ->
             BigDecimal(balanceString)
         }
     }

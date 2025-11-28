@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Wallet icon foreground -->
+    <group
+        android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="21.6"
+        android:translateY="21.6">
+        <!-- Main wallet body -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M72,28 L20,28 C15.6,28 12,31.6 12,36 L12,72 C12,76.4 15.6,80 20,80 L72,80 C76.4,80 80,76.4 80,72 L80,36 C80,31.6 76.4,28 72,28 Z M72,72 L20,72 L20,44 L72,44 L72,72 Z M20,36 L72,36 L72,40 L20,40 L20,36 Z"/>
+        <!-- Wallet card slot -->
+        <path
+            android:fillColor="#FFB74D"
+            android:pathData="M60,50 C57.8,50 56,51.8 56,54 C56,56.2 57.8,58 60,58 L70,58 C72.2,58 74,56.2 74,54 C74,51.8 72.2,50 70,50 L60,50 Z M68,56 C66.9,56 66,55.1 66,54 C66,52.9 66.9,52 68,52 C69.1,52 70,52.9 70,54 C70,55.1 69.1,56 68,56 Z"/>
+        <!-- Money/cash line detail -->
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M28,52 L48,52 L48,56 L28,56 Z"/>
+    </group>
+</vector>

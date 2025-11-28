@@ -6,17 +6,17 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WalletDao {
-    @Query("SELECT * FROM wallets WHERE isDeleted = 0 ORDER BY createdAt ASC")
-    fun getAllWallets(): Flow<List<WalletEntity>>
+    @Query("SELECT * FROM wallets WHERE userId = :userId AND isDeleted = 0 ORDER BY createdAt ASC")
+    fun getAllWallets(userId: String): Flow<List<WalletEntity>>
 
-    @Query("SELECT * FROM wallets WHERE isDeleted = 0 ORDER BY createdAt ASC")
-    suspend fun getAllWalletsSync(): List<WalletEntity>
+    @Query("SELECT * FROM wallets WHERE userId = :userId AND isDeleted = 0 ORDER BY createdAt ASC")
+    suspend fun getAllWalletsSync(userId: String): List<WalletEntity>
 
-    @Query("SELECT * FROM wallets WHERE id = :id AND isDeleted = 0")
-    suspend fun getWalletById(id: String): WalletEntity?
+    @Query("SELECT * FROM wallets WHERE id = :id AND userId = :userId AND isDeleted = 0")
+    suspend fun getWalletById(id: String, userId: String): WalletEntity?
 
-    @Query("SELECT balance FROM wallets WHERE id = :id AND isDeleted = 0")
-    fun getWalletBalance(id: String): Flow<String>
+    @Query("SELECT balance FROM wallets WHERE id = :id AND userId = :userId AND isDeleted = 0")
+    fun getWalletBalance(id: String, userId: String): Flow<String>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWallet(wallet: WalletEntity)

@@ -6,6 +6,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.Scope
+import com.google.api.services.drive.DriveScopes
 import com.youssefsolh.personalwallet.domain.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
@@ -41,6 +43,7 @@ class AuthService @Inject constructor(
                 .requestIdToken(webClientId)
                 .requestEmail()
                 .requestProfile()
+                .requestScopes(Scope(DriveScopes.DRIVE_APPDATA))
                 .build()
 
             GoogleSignIn.getClient(context, gso)

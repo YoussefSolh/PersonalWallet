@@ -10,6 +10,7 @@ import java.math.BigDecimal
 data class TransactionEntity(
     @PrimaryKey
     val id: String,
+    val userId: String,  // User ID for data isolation
     val amount: String,
     val type: String,
     val description: String,
@@ -44,9 +45,10 @@ fun TransactionEntity.toDomain(): Transaction {
     )
 }
 
-fun Transaction.toEntity(): TransactionEntity {
+fun Transaction.toEntity(userId: String): TransactionEntity {
     return TransactionEntity(
         id = id,
+        userId = userId,
         amount = amount.toString(),
         type = type.name,
         description = description,

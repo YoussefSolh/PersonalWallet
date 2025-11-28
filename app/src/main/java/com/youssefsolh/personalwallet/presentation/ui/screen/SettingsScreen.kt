@@ -2,6 +2,8 @@ package com.youssefsolh.personalwallet.presentation.ui.screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -12,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.youssefsolh.personalwallet.data.local.ThemeMode
+import com.youssefsolh.personalwallet.domain.repository.DriveBackupInfo
 import com.youssefsolh.personalwallet.presentation.viewmodel.SettingsViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -144,14 +147,65 @@ fun SettingsScreen(
 
             // Backup Dialog
             if (showBackupDialog) {
+                LaunchedEffect(Unit) {
+                    viewModel.loadAvailableBackups()
+                }
+
                 AlertDialog(
                     onDismissRequest = { showBackupDialog = false },
                     title = { Text("Backup & Restore") },
                     text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("Backup your data to Google Drive")
                             if (uiState.isBackingUp) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Creating backup...")
+                                }
+                            }
+
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            Text("Restore from Google Drive", style = MaterialTheme.typography.titleSmall)
+
+                            when {
+                                uiState.isLoadingBackups -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Loading backups...")
+                                    }
+                                }
+                                uiState.isRestoring -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Restoring data...")
+                                    }
+                                }
+                                uiState.availableBackups.isNullOrEmpty() -> {
+                                    Text(
+                                        "No backups found",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                else -> {
+                                    LazyColumn(
+                                        modifier = Modifier.heightIn(max = 200.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        items(uiState.availableBackups!!) { backup ->
+                                            BackupItem(
+                                                backup = backup,
+                                                onRestore = {
+                                                    viewModel.restoreBackup(backup.id)
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -160,14 +214,14 @@ fun SettingsScreen(
                             onClick = {
                                 viewModel.createBackup()
                             },
-                            enabled = !uiState.isBackingUp
+                            enabled = !uiState.isBackingUp && !uiState.isRestoring
                         ) {
                             Text("Backup Now")
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showBackupDialog = false }) {
-                            Text("Cancel")
+                            Text("Close")
                         }
                     }
                 )
@@ -299,6 +353,54 @@ private fun ThemeOption(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun BackupItem(
+    backup: DriveBackupInfo,
+    onRestore: () -> Unit
+) {
+    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = backup.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = dateFormatter.format(Date(backup.timestamp)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Size: ${backup.size / 1024} KB",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Button(
+                onClick = onRestore,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text("Restore")
+            }
         }
     }
 }

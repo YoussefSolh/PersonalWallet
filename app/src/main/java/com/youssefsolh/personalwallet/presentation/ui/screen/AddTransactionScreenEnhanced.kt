@@ -24,7 +24,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.youssefsolh.personalwallet.domain.model.Category
 import com.youssefsolh.personalwallet.domain.model.TransactionType
 import com.youssefsolh.personalwallet.domain.model.Wallet
-import com.youssefsolh.personalwallet.presentation.ui.common.IconMapper
 import com.youssefsolh.personalwallet.presentation.viewmodel.AddTransactionEnhancedViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -288,11 +287,18 @@ fun AddTransactionScreenEnhanced(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (selectedCategory != null) {
-                                Icon(
-                                    imageVector = IconMapper.getIcon(selectedCategory!!.icon),
-                                    contentDescription = null,
-                                    tint = Color(android.graphics.Color.parseColor(selectedCategory!!.color))
-                                )
+                                Surface(
+                                    modifier = Modifier.size(40.dp),
+                                    shape = MaterialTheme.shapes.small,
+                                    color = Color(android.graphics.Color.parseColor(selectedCategory!!.color))
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = selectedCategory!!.icon,
+                                            style = MaterialTheme.typography.titleLarge
+                                        )
+                                    }
+                                }
                                 Spacer(Modifier.width(12.dp))
                                 Text(selectedCategory!!.name)
                             } else {
@@ -511,11 +517,18 @@ private fun CategoryItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = IconMapper.getIcon(category.icon),
-                contentDescription = null,
-                tint = Color(android.graphics.Color.parseColor(category.color))
-            )
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = MaterialTheme.shapes.small,
+                color = Color(android.graphics.Color.parseColor(category.color))
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = category.icon,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            }
             Spacer(Modifier.width(12.dp))
             Text(category.name)
         }

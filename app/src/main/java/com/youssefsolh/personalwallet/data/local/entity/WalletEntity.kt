@@ -9,6 +9,7 @@ import java.math.BigDecimal
 data class WalletEntity(
     @PrimaryKey
     val id: String,
+    val userId: String,  // User ID for data isolation
     val name: String,
     val balance: String,
     val currency: String = "USD",
@@ -29,9 +30,10 @@ fun WalletEntity.toDomain(): Wallet {
     )
 }
 
-fun Wallet.toEntity(): WalletEntity {
+fun Wallet.toEntity(userId: String): WalletEntity {
     return WalletEntity(
         id = id,
+        userId = userId,
         name = name,
         balance = balance.toString(),
         currency = currency,

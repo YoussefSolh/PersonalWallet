@@ -6,15 +6,16 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
-    @Query("SELECT * FROM transactions WHERE isDeleted = 0 ORDER BY timestamp DESC")
-    fun getAllTransactions(): Flow<List<TransactionEntity>>
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND isDeleted = 0 ORDER BY timestamp DESC")
+    fun getAllTransactions(userId: String): Flow<List<TransactionEntity>>
 
-    @Query("SELECT * FROM transactions WHERE (fromWalletId = :walletId OR toWalletId = :walletId) AND isDeleted = 0 ORDER BY timestamp DESC")
-    fun getTransactionsByWallet(walletId: String): Flow<List<TransactionEntity>>
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND (fromWalletId = :walletId OR toWalletId = :walletId) AND isDeleted = 0 ORDER BY timestamp DESC")
+    fun getTransactionsByWallet(userId: String, walletId: String): Flow<List<TransactionEntity>>
 
     @Query("""
         SELECT * FROM transactions
-        WHERE (fromWalletId = :walletId OR toWalletId = :walletId)
+        WHERE userId = :userId
+        AND (fromWalletId = :walletId OR toWalletId = :walletId)
         AND isDeleted = 0
         AND (:type IS NULL OR type = :type)
         AND (:categoryId IS NULL OR categoryId = :categoryId)
@@ -24,6 +25,7 @@ interface TransactionDao {
         ORDER BY timestamp DESC
     """)
     fun getTransactionsByWalletFiltered(
+        userId: String,
         walletId: String,
         type: String? = null,
         categoryId: String? = null,
@@ -32,11 +34,11 @@ interface TransactionDao {
         searchQuery: String? = null
     ): Flow<List<TransactionEntity>>
 
-    @Query("SELECT * FROM transactions WHERE id = :id AND isDeleted = 0")
-    suspend fun getTransactionById(id: String): TransactionEntity?
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND id = :id AND isDeleted = 0")
+    suspend fun getTransactionById(userId: String, id: String): TransactionEntity?
 
-    @Query("SELECT * FROM transactions WHERE isDebt = 1 AND debtSettled = 0 AND isDeleted = 0 ORDER BY timestamp DESC")
-    fun getDebtTransactions(): Flow<List<TransactionEntity>>
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND isDebt = 1 AND debtSettled = 0 AND isDeleted = 0 ORDER BY timestamp DESC")
+    fun getDebtTransactions(userId: String): Flow<List<TransactionEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransaction(transaction: TransactionEntity)
@@ -56,23 +58,25 @@ interface TransactionDao {
     @Query("""
         SELECT categoryId, SUM(CAST(amount AS REAL)) as total, COUNT(*) as count
         FROM transactions
-        WHERE type = 'EXPENSE'
+        WHERE userId = :userId
+        AND type = 'EXPENSE'
         AND isDeleted = 0
         AND timestamp BETWEEN :startDate AND :endDate
         GROUP BY categoryId
         ORDER BY total DESC
     """)
-    suspend fun getSpendingByCategory(startDate: Long, endDate: Long): List<CategorySpendingEntity>
+    suspend fun getSpendingByCategory(userId: String, startDate: Long, endDate: Long): List<CategorySpendingEntity>
 
     @Query("""
         SELECT
             COALESCE(SUM(CASE WHEN type = 'INCOME' THEN CAST(amount AS REAL) ELSE 0 END), 0) as totalIncome,
             COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN CAST(amount AS REAL) ELSE 0 END), 0) as totalExpense
         FROM transactions
-        WHERE isDeleted = 0
+        WHERE userId = :userId
+        AND isDeleted = 0
         AND timestamp BETWEEN :startDate AND :endDate
     """)
-    suspend fun getIncomeExpenseSummary(startDate: Long, endDate: Long): IncomeExpenseSummaryEntity
+    suspend fun getIncomeExpenseSummary(userId: String, startDate: Long, endDate: Long): IncomeExpenseSummaryEntity
 }
 
 data class CategorySpendingEntity(

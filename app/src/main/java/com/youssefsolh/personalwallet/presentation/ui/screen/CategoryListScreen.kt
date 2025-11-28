@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +22,7 @@ import androidx.lifecycle.viewModelScope
 import com.youssefsolh.personalwallet.domain.model.Category
 import com.youssefsolh.personalwallet.domain.model.TransactionType
 import com.youssefsolh.personalwallet.domain.usecase.GetCategoriesUseCase
+import com.youssefsolh.personalwallet.domain.usecase.DeleteCategoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +32,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CategoryListViewModel @Inject constructor(
-    private val getCategoriesUseCase: GetCategoriesUseCase
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val deleteCategoryUseCase: DeleteCategoryUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CategoryListUiState())
@@ -63,6 +66,22 @@ class CategoryListViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteCategory(categoryId: String) {
+        viewModelScope.launch {
+            deleteCategoryUseCase(categoryId).fold(
+                onSuccess = {
+                    // Category will be automatically removed from the list
+                    // since we're observing the Flow from getCategoriesUseCase
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = error.message
+                    )
+                }
+            )
+        }
+    }
 }
 
 data class CategoryListUiState(
@@ -79,6 +98,7 @@ fun CategoryListScreen(
     viewModel: CategoryListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var categoryToDelete by remember { mutableStateOf<Category?>(null) }
 
     Scaffold(
         topBar = {
@@ -125,7 +145,12 @@ fun CategoryListScreen(
                 }
 
                 items(uiState.categories.filter { it.type == TransactionType.INCOME }) { category ->
-                    CategoryItem(category)
+                    CategoryItem(
+                        category = category,
+                        onDelete = if (!category.isDefault) {
+                            { categoryToDelete = category }
+                        } else null
+                    )
                 }
 
                 // Expense Categories
@@ -139,15 +164,47 @@ fun CategoryListScreen(
                 }
 
                 items(uiState.categories.filter { it.type == TransactionType.EXPENSE }) { category ->
-                    CategoryItem(category)
+                    CategoryItem(
+                        category = category,
+                        onDelete = if (!category.isDefault) {
+                            { categoryToDelete = category }
+                        } else null
+                    )
                 }
             }
         }
     }
+
+    // Delete confirmation dialog
+    categoryToDelete?.let { category ->
+        AlertDialog(
+            onDismissRequest = { categoryToDelete = null },
+            title = { Text("Delete Category") },
+            text = { Text("Are you sure you want to delete \"${category.name}\"?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteCategory(category.id)
+                        categoryToDelete = null
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { categoryToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
-fun CategoryItem(category: Category) {
+fun CategoryItem(
+    category: Category,
+    onDelete: (() -> Unit)? = null
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -163,7 +220,8 @@ fun CategoryItem(category: Category) {
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
                 // Emoji icon with colored background
                 Surface(
@@ -192,6 +250,17 @@ fun CategoryItem(category: Category) {
                         text = if (category.isDefault) "Default Category" else "Custom Category",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            // Show delete button only for custom categories
+            if (onDelete != null) {
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete category",
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }

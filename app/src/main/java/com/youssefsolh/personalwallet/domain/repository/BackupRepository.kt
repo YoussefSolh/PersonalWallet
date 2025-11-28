@@ -3,6 +3,7 @@ package com.youssefsolh.personalwallet.domain.repository
 import com.youssefsolh.personalwallet.domain.model.BackupData
 
 interface BackupRepository {
+    fun setCurrentUser(email: String?)
     suspend fun createBackup(): Result<BackupData>
     suspend fun uploadBackupToDrive(backupData: BackupData): Result<String>
     suspend fun downloadBackupFromDrive(fileId: String): Result<BackupData>

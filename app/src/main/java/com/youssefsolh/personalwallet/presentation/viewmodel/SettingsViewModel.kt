@@ -8,6 +8,7 @@ import com.youssefsolh.personalwallet.domain.usecase.BackupDataUseCase
 import com.youssefsolh.personalwallet.domain.usecase.RestoreDataUseCase
 import com.youssefsolh.personalwallet.domain.usecase.SignOutUseCase
 import com.youssefsolh.personalwallet.domain.repository.BackupRepository
+import com.youssefsolh.personalwallet.domain.repository.DriveBackupInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -82,6 +83,27 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun loadAvailableBackups() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingBackups = true, errorMessage = null)
+
+            backupRepository.listDriveBackups().fold(
+                onSuccess = { backups ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoadingBackups = false,
+                        availableBackups = backups
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoadingBackups = false,
+                        errorMessage = error.message ?: "Failed to load backups"
+                    )
+                }
+            )
+        }
+    }
+
     fun restoreBackup(fileId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRestoring = true, errorMessage = null)
@@ -90,7 +112,8 @@ class SettingsViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         isRestoring = false,
-                        successMessage = "Data restored successfully"
+                        successMessage = "Data restored successfully",
+                        availableBackups = null
                     )
                 },
                 onFailure = { error ->
@@ -123,6 +146,8 @@ data class SettingsUiState(
     val lastBackupTimestamp: Long? = null,
     val isBackingUp: Boolean = false,
     val isRestoring: Boolean = false,
+    val isLoadingBackups: Boolean = false,
+    val availableBackups: List<DriveBackupInfo>? = null,
     val biometricEnabled: Boolean = false,
     val defaultCurrency: String = "USD",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,

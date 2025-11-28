@@ -60,6 +60,22 @@ fun DashboardScreen(
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
+            // Welcome message
+            val currentUser = uiState.currentUser
+            if (currentUser != null) {
+                val userName = if (currentUser.isGuest) {
+                    "Guest"
+                } else {
+                    currentUser.displayName ?: currentUser.email
+                }
+                Text(
+                    text = "Welcome, $userName",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

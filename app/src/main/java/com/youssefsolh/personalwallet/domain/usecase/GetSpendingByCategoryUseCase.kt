@@ -1,5 +1,6 @@
 package com.youssefsolh.personalwallet.domain.usecase
 
+import com.youssefsolh.personalwallet.data.local.CurrentUserProvider
 import com.youssefsolh.personalwallet.data.local.dao.TransactionDao
 import com.youssefsolh.personalwallet.domain.model.CategorySpending
 import com.youssefsolh.personalwallet.domain.repository.CategoryRepository
@@ -9,11 +10,13 @@ import javax.inject.Inject
 
 class GetSpendingByCategoryUseCase @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val currentUserProvider: CurrentUserProvider
 ) {
     suspend operator fun invoke(startDate: Long, endDate: Long): Result<List<CategorySpending>> {
         return try {
-            val spendingData = transactionDao.getSpendingByCategory(startDate, endDate)
+            val userId = currentUserProvider.getCurrentUserId()
+            val spendingData = transactionDao.getSpendingByCategory(userId, startDate, endDate)
             val categories = categoryRepository.getAllCategories().first()
 
             val totalSpent = spendingData.sumOf { it.total }

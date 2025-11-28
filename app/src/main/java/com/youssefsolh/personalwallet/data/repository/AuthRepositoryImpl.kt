@@ -27,7 +27,8 @@ class AuthRepositoryImpl @Inject constructor(
         // Check if user is already signed in
         try {
             authService.getCurrentGoogleAccount()?.let { account ->
-                _currentUser.value = authService.accountToUser(account)
+                val user = authService.accountToUser(account)
+                _currentUser.value = user
                 Log.d(TAG, "User already signed in: ${account.email}")
             }
         } catch (e: Exception) {
