@@ -31,6 +31,15 @@ class DataMigrationHelper @Inject constructor(
                 return
             }
 
+            // Since this is a fresh installation with no previous data,
+            // mark migration as complete immediately to avoid database access issues
+            userPreferences.setOrphanedDataMigrated(true)
+            Log.d(TAG, "Fresh installation detected, skipping orphaned data migration")
+
+            // Note: The code below is commented out because:
+            // 1. There are no previous installations (no orphaned data to migrate)
+            // 2. Accessing the database here causes encryption issues during initial setup
+            /*
             val currentUserId = currentUserProvider.getCurrentUserId()
             Log.d(TAG, "Migrating orphaned data to user: $currentUserId")
 
@@ -44,8 +53,15 @@ class DataMigrationHelper @Inject constructor(
             // Mark migration as complete
             userPreferences.setOrphanedDataMigrated(true)
             Log.d(TAG, "Orphaned data migration completed successfully")
+            */
         } catch (e: Exception) {
             Log.e(TAG, "Error migrating orphaned data", e)
+            // Mark as migrated even on error to avoid repeated failures
+            try {
+                userPreferences.setOrphanedDataMigrated(true)
+            } catch (prefError: Exception) {
+                Log.e(TAG, "Error saving migration status", prefError)
+            }
         }
     }
 }

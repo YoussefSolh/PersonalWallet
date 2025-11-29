@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,6 +96,7 @@ data class CategoryListUiState(
 fun CategoryListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddCategory: () -> Unit,
+    onNavigateToEditCategory: (String) -> Unit,
     viewModel: CategoryListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -147,6 +149,9 @@ fun CategoryListScreen(
                 items(uiState.categories.filter { it.type == TransactionType.INCOME }) { category ->
                     CategoryItem(
                         category = category,
+                        onEdit = if (!category.isDefault) {
+                            { onNavigateToEditCategory(category.id) }
+                        } else null,
                         onDelete = if (!category.isDefault) {
                             { categoryToDelete = category }
                         } else null
@@ -166,6 +171,9 @@ fun CategoryListScreen(
                 items(uiState.categories.filter { it.type == TransactionType.EXPENSE }) { category ->
                     CategoryItem(
                         category = category,
+                        onEdit = if (!category.isDefault) {
+                            { onNavigateToEditCategory(category.id) }
+                        } else null,
                         onDelete = if (!category.isDefault) {
                             { categoryToDelete = category }
                         } else null
@@ -203,6 +211,7 @@ fun CategoryListScreen(
 @Composable
 fun CategoryItem(
     category: Category,
+    onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null
 ) {
     Card(
@@ -254,14 +263,29 @@ fun CategoryItem(
                 }
             }
 
-            // Show delete button only for custom categories
-            if (onDelete != null) {
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete category",
-                        tint = MaterialTheme.colorScheme.error
-                    )
+            // Show edit and delete buttons only for custom categories
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (onEdit != null) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit category",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                if (onDelete != null) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete category",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

@@ -13,7 +13,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import java.security.SecureRandom
 import javax.inject.Singleton
 
@@ -24,17 +24,15 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideWalletDatabase(@ApplicationContext context: Context): WalletDatabase {
+        // Load SQLCipher native library
+        System.loadLibrary("sqlcipher")
+
         // Get or create database passphrase
         val passphrase = getDatabasePassphrase(context)
-        val factory = SupportFactory(passphrase)
+        val factory = SupportOpenHelperFactory(passphrase)
 
-        return Room.databaseBuilder(
-            context.applicationContext,
-            WalletDatabase::class.java,
-            WalletDatabase.DATABASE_NAME
-        )
-        .openHelperFactory(factory)
-        .build()
+        // Use WalletDatabase.buildDatabase which includes migrations and onCreate callback
+        return WalletDatabase.buildDatabase(context, factory)
     }
 
     /**

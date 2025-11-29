@@ -127,12 +127,25 @@ fun WalletNavigation(
                 },
                 onNavigateToAddCategory = {
                     navController.navigate("add_category")
+                },
+                onNavigateToEditCategory = { categoryId ->
+                    navController.navigate("edit_category/$categoryId")
                 }
             )
         }
 
         composable("add_category") {
             AddCategoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("edit_category/{categoryId}") { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
+            AddCategoryScreen(
+                categoryId = categoryId,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

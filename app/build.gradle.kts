@@ -22,6 +22,11 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        ndk {
+            // Support 16KB page sizes for Android 15+
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+        }
     }
 
     buildTypes {
@@ -64,6 +69,10 @@ android {
             excludes += "META-INF/INDEX.LIST"
             excludes += "META-INF/DEPENDENCIES"
         }
+        jniLibs {
+            // Keep native libraries uncompressed for better compatibility
+            useLegacyPackaging = false
+        }
     }
 }
 
@@ -90,7 +99,8 @@ dependencies {
     kapt(libs.room.compiler)
 
     // SQLCipher for database encryption
-    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    // Using sqlcipher-android 4.6.1+ with native 16KB page size support
+    implementation("net.zetetic:sqlcipher-android:4.6.1@aar")
     implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
     // Lifecycle & ViewModel

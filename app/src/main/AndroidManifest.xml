@@ -18,10 +18,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PersonalWallet"
         tools:targetApi="31">
+
+        <!-- Declare support for 16KB page sizes (Android 15+) -->
+        <property
+            android:name="android.force16KbPageSize"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.PersonalWallet">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

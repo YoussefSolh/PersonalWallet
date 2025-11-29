@@ -25,6 +25,7 @@ import com.youssefsolh.personalwallet.presentation.viewmodel.AddCategoryViewMode
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCategoryScreen(
+    categoryId: String? = null,
     onNavigateBack: () -> Unit,
     viewModel: AddCategoryViewModel = hiltViewModel()
 ) {
@@ -38,6 +39,23 @@ fun AddCategoryScreen(
     var errorMessage by remember { mutableStateOf("") }
 
     val uiState by viewModel.uiState.collectAsState()
+
+    // Load category if editing
+    LaunchedEffect(categoryId) {
+        if (categoryId != null) {
+            viewModel.loadCategory(categoryId)
+        }
+    }
+
+    // Pre-fill form when category is loaded
+    LaunchedEffect(uiState.loadedCategory) {
+        uiState.loadedCategory?.let { category ->
+            name = category.name
+            selectedIcon = category.icon
+            selectedColor = category.color
+            selectedType = category.type
+        }
+    }
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
@@ -136,7 +154,7 @@ fun AddCategoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Category") },
+                title = { Text(if (uiState.isEditMode) "Edit Category" else "Add Category") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -263,7 +281,7 @@ fun AddCategoryScreen(
                         }
                         else -> {
                             showError = false
-                            viewModel.createCategory(
+                            viewModel.saveCategory(
                                 name = name,
                                 icon = selectedIcon,
                                 color = selectedColor,
@@ -281,7 +299,7 @@ fun AddCategoryScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Create Category")
+                    Text(if (uiState.isEditMode) "Update Category" else "Create Category")
                 }
             }
         }
