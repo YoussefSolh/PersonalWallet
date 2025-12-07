@@ -52,18 +52,16 @@ abstract class WalletDatabase : RoomDatabase() {
             }
 
             return builder
-                .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+                // Use TRUNCATE journal mode for better compatibility with SQLCipher
+                .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
                         try {
                             Log.i(TAG, "Database onCreate: Creating new database")
 
-                            // Set page size to 16KB for better performance (suppresses warning)
-                            db.execSQL("PRAGMA page_size=16384")
-                            Log.d(TAG, "onCreate: Set page size to 16KB")
-
                             // Insert default categories on database creation using SQL
+                            // Do NOT set page_size here - it must be set before database creation
                             val timestamp = System.currentTimeMillis()
                             var categoryCount = 0
 

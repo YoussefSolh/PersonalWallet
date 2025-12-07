@@ -177,3 +177,11 @@
 -dontwarn org.openjsse.**
 -dontwarn edu.umd.cs.findbugs.annotations.**
 -dontwarn javax.annotation.**
+
+# ===================================
+# Apache HTTP Client (used by Google API)
+# These classes are not available on Android
+# ===================================
+-dontwarn org.apache.http.**
+-dontwarn javax.naming.**
+-dontwarn org.ietf.jgss.**
