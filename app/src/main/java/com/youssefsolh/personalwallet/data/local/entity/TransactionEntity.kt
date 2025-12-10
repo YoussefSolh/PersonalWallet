@@ -1,5 +1,6 @@
 package com.youssefsolh.personalwallet.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.youssefsolh.personalwallet.domain.model.Transaction
@@ -23,7 +24,20 @@ data class TransactionEntity(
     val timestamp: Long = System.currentTimeMillis(),
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+
+    // Multi-currency fields
+    @ColumnInfo(name = "original_currency")
+    val originalCurrency: String = "USD",  // ISO code (USD, EUR, etc.) - currency of the wallet
+
+    @ColumnInfo(name = "default_currency")
+    val defaultCurrency: String = "USD",  // ISO code of default currency at time of transaction
+
+    @ColumnInfo(name = "amount_in_default_currency")
+    val amountInDefaultCurrency: String = "0.0",  // Converted amount (stored as String for precision)
+
+    @ColumnInfo(name = "exchange_rate")
+    val exchangeRate: String = "1.0"  // Rate used for conversion (immutable, stored as String for precision)
 )
 
 fun TransactionEntity.toDomain(): Transaction {
@@ -41,7 +55,11 @@ fun TransactionEntity.toDomain(): Transaction {
         timestamp = timestamp,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        isDeleted = isDeleted
+        isDeleted = isDeleted,
+        originalCurrency = originalCurrency,
+        defaultCurrency = defaultCurrency,
+        amountInDefaultCurrency = BigDecimal(amountInDefaultCurrency),
+        exchangeRate = BigDecimal(exchangeRate)
     )
 }
 
@@ -61,6 +79,10 @@ fun Transaction.toEntity(userId: String): TransactionEntity {
         timestamp = timestamp,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        isDeleted = isDeleted
+        isDeleted = isDeleted,
+        originalCurrency = originalCurrency,
+        defaultCurrency = defaultCurrency,
+        amountInDefaultCurrency = amountInDefaultCurrency.toString(),
+        exchangeRate = exchangeRate.toString()
     )
 }

@@ -6,6 +6,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.youssefsolh.personalwallet.data.local.WalletDatabase
 import com.youssefsolh.personalwallet.data.local.dao.CategoryDao
+import com.youssefsolh.personalwallet.data.local.dao.CurrencyDao
 import com.youssefsolh.personalwallet.data.local.dao.TransactionDao
 import com.youssefsolh.personalwallet.data.local.dao.WalletDao
 import dagger.Module
@@ -47,7 +48,7 @@ object DatabaseModule {
                 val testHelper = testFactory.create(
                     androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(context)
                         .name(WalletDatabase.DATABASE_NAME)
-                        .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(5) { // Current database version
+                        .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(6) { // Current database version
                             override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                                 // Don't create anything - this should not be called for existing DB
                                 android.util.Log.w("DatabaseModule", "onCreate called during verification - unexpected!")
@@ -238,4 +239,7 @@ object DatabaseModule {
 
     @Provides
     fun provideCategoryDao(database: WalletDatabase): CategoryDao = database.categoryDao()
+
+    @Provides
+    fun provideCurrencyDao(database: WalletDatabase): CurrencyDao = database.currencyDao()
 }

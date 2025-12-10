@@ -568,7 +568,7 @@ private fun WalletItem(
                 )
             }
             Text(
-                "$${wallet.balance}",
+                wallet.getFormattedBalance(),
                 style = MaterialTheme.typography.titleMedium
             )
         }

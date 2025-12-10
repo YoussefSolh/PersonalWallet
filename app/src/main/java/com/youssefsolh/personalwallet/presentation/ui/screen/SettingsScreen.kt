@@ -25,6 +25,7 @@ import java.util.Locale
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToCategories: () -> Unit = {},
+    onNavigateToCurrencies: () -> Unit = {},
     onNavigateToDebts: () -> Unit = {},
     onNavigateToReports: () -> Unit = {},
     onSignOut: () -> Unit = {},
@@ -101,6 +102,13 @@ fun SettingsScreen(
                 title = "Categories",
                 subtitle = "Manage transaction categories",
                 onClick = onNavigateToCategories
+            )
+            HorizontalDivider()
+
+            SettingsItem(
+                title = "Currencies",
+                subtitle = "Manage currencies and exchange rates",
+                onClick = onNavigateToCurrencies
             )
             HorizontalDivider()
 

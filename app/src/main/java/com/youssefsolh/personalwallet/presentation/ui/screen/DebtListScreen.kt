@@ -189,7 +189,10 @@ fun DebtCard(
                     modifier = Modifier.padding(top = 4.dp)
                 )
                 Text(
-                    text = "$${debt.amount}",
+                    text = com.youssefsolh.personalwallet.domain.model.Wallet.formatAmountWithCurrency(
+                        debt.amount,
+                        "$"  // TODO: Use default currency symbol
+                    ),
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = MaterialTheme.colorScheme.error,

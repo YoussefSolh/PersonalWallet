@@ -109,7 +109,10 @@ fun ReportsScreen(
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                             )
                                             Text(
-                                                text = "$${summary.totalIncome}",
+                                                text = com.youssefsolh.personalwallet.domain.model.Wallet.formatAmountWithCurrency(
+                                                    summary.totalIncome,
+                                                    "$"  // TODO: Use default currency symbol
+                                                ),
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.primary
@@ -123,7 +126,10 @@ fun ReportsScreen(
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                             )
                                             Text(
-                                                text = "$${summary.totalExpense}",
+                                                text = com.youssefsolh.personalwallet.domain.model.Wallet.formatAmountWithCurrency(
+                                                    summary.totalExpense,
+                                                    "$"  // TODO: Use default currency symbol
+                                                ),
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.error
@@ -147,7 +153,10 @@ fun ReportsScreen(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            text = "$${summary.netIncome}",
+                                            text = com.youssefsolh.personalwallet.domain.model.Wallet.formatAmountWithCurrency(
+                                                summary.netIncome,
+                                                "$"  // TODO: Use default currency symbol
+                                            ),
                                             fontSize = 24.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (summary.netIncome.signum() >= 0)
@@ -225,7 +234,10 @@ fun CategorySpendingItem(spending: CategorySpending) {
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "$${spending.totalAmount}",
+                        text = com.youssefsolh.personalwallet.domain.model.Wallet.formatAmountWithCurrency(
+                            spending.totalAmount,
+                            "$"  // TODO: Use default currency symbol
+                        ),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )

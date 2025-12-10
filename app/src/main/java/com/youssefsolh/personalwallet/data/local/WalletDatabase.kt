@@ -8,9 +8,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import android.content.Context
 import android.util.Log
 import com.youssefsolh.personalwallet.data.local.dao.CategoryDao
+import com.youssefsolh.personalwallet.data.local.dao.CurrencyDao
 import com.youssefsolh.personalwallet.data.local.dao.TransactionDao
 import com.youssefsolh.personalwallet.data.local.dao.WalletDao
 import com.youssefsolh.personalwallet.data.local.entity.CategoryEntity
+import com.youssefsolh.personalwallet.data.local.entity.CurrencyEntity
 import com.youssefsolh.personalwallet.data.local.entity.TransactionEntity
 import com.youssefsolh.personalwallet.data.local.entity.WalletEntity
 import com.youssefsolh.personalwallet.domain.model.DefaultCategories
@@ -22,15 +24,17 @@ import kotlinx.coroutines.launch
     entities = [
         WalletEntity::class,
         TransactionEntity::class,
-        CategoryEntity::class
+        CategoryEntity::class,
+        CurrencyEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class WalletDatabase : RoomDatabase() {
     abstract fun walletDao(): WalletDao
     abstract fun transactionDao(): TransactionDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun currencyDao(): CurrencyDao
 
     companion object {
         private const val TAG = "WalletDatabase"
@@ -83,13 +87,29 @@ abstract class WalletDatabase : RoomDatabase() {
                             }
 
                             Log.i(TAG, "onCreate: Successfully inserted $categoryCount default categories")
+
+                            // Insert default currencies on database creation
+                            // USD as system currency (cannot be deleted, is default)
+                            db.execSQL("""
+                                INSERT OR IGNORE INTO currencies
+                                (code, name, symbol, exchange_rate_to_default, is_default, is_system_currency, is_manual_rate, created_at, updated_at, last_rate_update)
+                                VALUES ('USD', 'US Dollar', '$', '1.0', 1, 1, 0, $timestamp, $timestamp, $timestamp)
+                            """)
+                            // EUR as regular currency (can be deleted)
+                            db.execSQL("""
+                                INSERT OR IGNORE INTO currencies
+                                (code, name, symbol, exchange_rate_to_default, is_default, is_system_currency, is_manual_rate, created_at, updated_at, last_rate_update)
+                                VALUES ('EUR', 'Euro', '€', '0.92', 0, 0, 0, $timestamp, $timestamp, $timestamp)
+                            """)
+
+                            Log.i(TAG, "onCreate: Successfully inserted default currencies (USD, EUR)")
                         } catch (e: Exception) {
                             Log.e(TAG, "onCreate FAILED: ${e.message}", e)
                             throw e
                         }
                     }
                 })
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .build()
         }
 
@@ -353,6 +373,82 @@ abstract class WalletDatabase : RoomDatabase() {
                     Log.i(TAG, "MIGRATION_4_5 completed successfully - Total default categories in DB: $totalCount")
                 } catch (e: Exception) {
                     Log.e(TAG, "MIGRATION_4_5 FAILED: ${e.message}", e)
+                    throw e
+                }
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                try {
+                    Log.i(TAG, "Starting MIGRATION_5_6: Adding multi-currency support")
+                    val timestamp = System.currentTimeMillis()
+
+                    // 1. Create currencies table
+                    database.execSQL("""
+                        CREATE TABLE IF NOT EXISTS currencies (
+                            code TEXT PRIMARY KEY NOT NULL,
+                            name TEXT NOT NULL,
+                            symbol TEXT NOT NULL,
+                            exchange_rate_to_default TEXT NOT NULL,
+                            is_default INTEGER NOT NULL DEFAULT 0,
+                            is_system_currency INTEGER NOT NULL DEFAULT 0,
+                            is_manual_rate INTEGER NOT NULL DEFAULT 0,
+                            created_at INTEGER NOT NULL,
+                            updated_at INTEGER NOT NULL,
+                            last_rate_update INTEGER
+                        )
+                    """)
+                    Log.d(TAG, "MIGRATION_5_6: Created currencies table")
+
+                    // 2. Insert USD as system currency (cannot be deleted) and EUR as regular currency
+                    database.execSQL("""
+                        INSERT OR IGNORE INTO currencies
+                        (code, name, symbol, exchange_rate_to_default, is_default, is_system_currency, is_manual_rate, created_at, updated_at, last_rate_update)
+                        VALUES ('USD', 'US Dollar', '$', '1.0', 1, 1, 0, $timestamp, $timestamp, $timestamp)
+                    """)
+                    database.execSQL("""
+                        INSERT OR IGNORE INTO currencies
+                        (code, name, symbol, exchange_rate_to_default, is_default, is_system_currency, is_manual_rate, created_at, updated_at, last_rate_update)
+                        VALUES ('EUR', 'Euro', '€', '0.92', 0, 0, 0, $timestamp, $timestamp, $timestamp)
+                    """)
+                    Log.d(TAG, "MIGRATION_5_6: Inserted USD (system) and EUR (regular)")
+
+                    // 3. Add currency columns to transactions table with default values
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN original_currency TEXT NOT NULL DEFAULT 'USD'")
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN default_currency TEXT NOT NULL DEFAULT 'USD'")
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN amount_in_default_currency TEXT NOT NULL DEFAULT '0.0'")
+                    database.execSQL("ALTER TABLE transactions ADD COLUMN exchange_rate TEXT NOT NULL DEFAULT '1.0'")
+                    Log.d(TAG, "MIGRATION_5_6: Added currency columns to transactions table")
+
+                    // 4. Populate transaction currency fields based on wallet currency
+                    // For existing transactions, we need to:
+                    // - Set original_currency from the wallet's currency
+                    // - Set default_currency to 'USD' (the default)
+                    // - Copy amount to amount_in_default_currency (assuming all were in USD)
+                    // - Set exchange_rate to 1.0 (assuming all were in USD)
+                    database.execSQL("""
+                        UPDATE transactions
+                        SET original_currency = COALESCE(
+                            (SELECT currency FROM wallets WHERE wallets.id = transactions.fromWalletId),
+                            'USD'
+                        ),
+                        default_currency = 'USD',
+                        amount_in_default_currency = amount,
+                        exchange_rate = '1.0'
+                        WHERE fromWalletId IS NOT NULL
+                    """)
+                    Log.d(TAG, "MIGRATION_5_6: Updated existing transactions with currency data")
+
+                    // Count migrations
+                    val cursor = database.query("SELECT COUNT(*) FROM currencies")
+                    cursor.moveToFirst()
+                    val totalCurrencies = cursor.getInt(0)
+                    cursor.close()
+
+                    Log.i(TAG, "MIGRATION_5_6 completed successfully - Total currencies: $totalCurrencies")
+                } catch (e: Exception) {
+                    Log.e(TAG, "MIGRATION_5_6 FAILED: ${e.message}", e)
                     throw e
                 }
             }

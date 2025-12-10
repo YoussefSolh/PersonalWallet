@@ -2,15 +2,18 @@ package com.youssefsolh.personalwallet.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.youssefsolh.personalwallet.domain.model.Currency
 import com.youssefsolh.personalwallet.domain.model.Transaction
 import com.youssefsolh.personalwallet.domain.model.TransactionType
 import com.youssefsolh.personalwallet.domain.model.Wallet
+import com.youssefsolh.personalwallet.domain.repository.CurrencyRepository
 import com.youssefsolh.personalwallet.domain.usecase.AddTransactionUseCase
 import com.youssefsolh.personalwallet.domain.usecase.GetAllWalletsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.UUID
@@ -19,22 +22,77 @@ import javax.inject.Inject
 @HiltViewModel
 class TransferViewModel @Inject constructor(
     private val addTransactionUseCase: AddTransactionUseCase,
-    private val getAllWalletsUseCase: GetAllWalletsUseCase
+    private val getAllWalletsUseCase: GetAllWalletsUseCase,
+    private val currencyRepository: CurrencyRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TransferUiState())
     val uiState: StateFlow<TransferUiState> = _uiState.asStateFlow()
 
     init {
-        loadWallets()
+        loadData()
     }
 
-    private fun loadWallets() {
+    private fun loadData() {
         viewModelScope.launch {
-            getAllWalletsUseCase().collect { wallets ->
-                _uiState.value = _uiState.value.copy(wallets = wallets)
+            combine(
+                getAllWalletsUseCase(),
+                currencyRepository.getAllCurrencies()
+            ) { wallets, currencies ->
+                Pair(wallets, currencies)
+            }.collect { (wallets, currencies) ->
+                _uiState.value = _uiState.value.copy(
+                    wallets = wallets,
+                    currencies = currencies
+                )
+                // Recalculate converted amount when currencies are loaded
+                calculateConvertedAmount()
             }
         }
+    }
+
+    /**
+     * Calculate the converted amount for the destination wallet based on exchange rates.
+     */
+    private fun calculateConvertedAmount() {
+        val state = _uiState.value
+        val fromWallet = state.fromWallet
+        val toWallet = state.toWallet
+        val amount = state.amount.toBigDecimalOrNull()
+
+        if (fromWallet == null || toWallet == null || amount == null || amount <= BigDecimal.ZERO) {
+            _uiState.value = state.copy(convertedAmount = null)
+            return
+        }
+
+        // If same currency, no conversion needed
+        if (fromWallet.currency == toWallet.currency) {
+            _uiState.value = state.copy(convertedAmount = null)
+            return
+        }
+
+        // Find currencies
+        val fromCurrency = state.currencies.find { it.code == fromWallet.currency }
+        val toCurrency = state.currencies.find { it.code == toWallet.currency }
+
+        if (fromCurrency == null || toCurrency == null) {
+            _uiState.value = state.copy(convertedAmount = null)
+            return
+        }
+
+        // Convert: amount in fromCurrency -> default currency -> toCurrency
+        // Step 1: Convert from source to default currency
+        val amountInDefault = amount.divide(
+            fromCurrency.exchangeRateToDefault,
+            10,
+            BigDecimal.ROUND_HALF_UP
+        )
+
+        // Step 2: Convert from default currency to destination
+        val convertedAmount = amountInDefault.multiply(toCurrency.exchangeRateToDefault)
+            .setScale(2, BigDecimal.ROUND_HALF_UP)
+
+        _uiState.value = state.copy(convertedAmount = convertedAmount)
     }
 
     fun onFromWalletSelected(wallet: Wallet) {
@@ -42,6 +100,7 @@ class TransferViewModel @Inject constructor(
             fromWallet = wallet,
             errorMessage = null
         )
+        calculateConvertedAmount()
     }
 
     fun onToWalletSelected(wallet: Wallet) {
@@ -49,6 +108,7 @@ class TransferViewModel @Inject constructor(
             toWallet = wallet,
             errorMessage = null
         )
+        calculateConvertedAmount()
     }
 
     fun onAmountChanged(amount: String) {
@@ -56,6 +116,7 @@ class TransferViewModel @Inject constructor(
             amount = amount,
             errorMessage = null
         )
+        calculateConvertedAmount()
     }
 
     fun onDescriptionChanged(description: String) {
@@ -136,11 +197,13 @@ class TransferViewModel @Inject constructor(
 
 data class TransferUiState(
     val wallets: List<Wallet> = emptyList(),
+    val currencies: List<Currency> = emptyList(),
     val fromWallet: Wallet? = null,
     val toWallet: Wallet? = null,
     val amount: String = "",
     val description: String = "",
     val isDebt: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val convertedAmount: BigDecimal? = null
 )

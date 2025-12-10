@@ -7,12 +7,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.youssefsolh.personalwallet.presentation.ui.screen.AddCategoryScreen
+import com.youssefsolh.personalwallet.presentation.ui.screen.AddCurrencyScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.AddTransactionScreenEnhanced
 import com.youssefsolh.personalwallet.presentation.ui.screen.AddWalletScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.CategoryListScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.DashboardScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.DebtListScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.LoginScreen
+import com.youssefsolh.personalwallet.presentation.ui.screen.ManageCurrenciesScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.ReportsScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.SettingsScreen
 import com.youssefsolh.personalwallet.presentation.ui.screen.TransferScreen
@@ -186,6 +188,9 @@ fun WalletNavigation(
                 onNavigateToCategories = {
                     navController.navigate("categories")
                 },
+                onNavigateToCurrencies = {
+                    navController.navigate("manage_currencies")
+                },
                 onNavigateToDebts = {
                     navController.navigate("debts")
                 },
@@ -196,6 +201,38 @@ fun WalletNavigation(
                     navController.navigate("login") {
                         popUpTo("dashboard") { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable("manage_currencies") {
+            ManageCurrenciesScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToAddCurrency = {
+                    navController.navigate("add_currency")
+                },
+                onNavigateToEditCurrency = { currencyCode ->
+                    navController.navigate("edit_currency/$currencyCode")
+                }
+            )
+        }
+
+        composable("add_currency") {
+            AddCurrencyScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("edit_currency/{currencyCode}") { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            AddCurrencyScreen(
+                currencyCode = currencyCode,
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

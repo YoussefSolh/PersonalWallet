@@ -206,7 +206,7 @@ fun WalletDetailScreen(
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "$${uiState.wallet?.balance}",
+                                text = uiState.wallet?.getFormattedBalance() ?: "$0.00",
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold
                             )

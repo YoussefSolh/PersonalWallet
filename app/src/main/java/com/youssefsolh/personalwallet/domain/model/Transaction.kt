@@ -18,5 +18,11 @@ data class Transaction(
     val timestamp: Long = System.currentTimeMillis(),
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+
+    // Multi-currency fields
+    val originalCurrency: String = "USD", // ISO code of the wallet's currency
+    val defaultCurrency: String = "USD", // ISO code of default currency at time of transaction
+    val amountInDefaultCurrency: @Serializable(with = BigDecimalSerializer::class) BigDecimal = BigDecimal.ZERO, // Converted amount
+    val exchangeRate: @Serializable(with = BigDecimalSerializer::class) BigDecimal = BigDecimal.ONE // Immutable rate at time of transaction
 )

@@ -37,6 +37,11 @@ fun TransferScreen(
         }
     }
 
+    // Helper function to get currency symbol
+    fun getCurrencySymbol(currencyCode: String): String {
+        return uiState.currencies.find { it.code == currencyCode }?.symbol ?: currencyCode
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -90,7 +95,7 @@ fun TransferScreen(
                                 Column {
                                     Text(wallet.name)
                                     Text(
-                                        text = "${wallet.currency} ${wallet.balance}",
+                                        text = "${getCurrencySymbol(wallet.currency)}${wallet.balance}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -140,7 +145,7 @@ fun TransferScreen(
                                     Column {
                                         Text(wallet.name)
                                         Text(
-                                            text = "${wallet.currency} ${wallet.balance}",
+                                            text = "${getCurrencySymbol(wallet.currency)}${wallet.balance}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -162,9 +167,46 @@ fun TransferScreen(
                 label = { Text("Amount") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                prefix = { Text("${uiState.fromWallet?.currency ?: ""} ") },
+                prefix = {
+                    Text(uiState.fromWallet?.currency?.let { getCurrencySymbol(it) } ?: "")
+                },
                 singleLine = true
             )
+
+            // Show converted amount if currencies differ
+            if (uiState.convertedAmount != null && uiState.toWallet != null) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Destination will receive:",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "${getCurrencySymbol(uiState.toWallet!!.currency)}${uiState.convertedAmount}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Text(
+                            text = "≈",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+            }
 
             // Description Input
             OutlinedTextField(

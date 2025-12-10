@@ -1,5 +1,7 @@
 package com.youssefsolh.personalwallet.data.local.entity
 
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.youssefsolh.personalwallet.domain.model.Wallet
@@ -18,12 +20,42 @@ data class WalletEntity(
     val isDeleted: Boolean = false
 )
 
+/**
+ * Data class for wallet joined with currency symbol from currencies table.
+ */
+data class WalletWithCurrencySymbol(
+    val id: String,
+    val userId: String,
+    val name: String,
+    val balance: String,
+    val currency: String,
+    @ColumnInfo(name = "currencySymbol")
+    val currencySymbol: String?,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val isDeleted: Boolean
+)
+
 fun WalletEntity.toDomain(): Wallet {
     return Wallet(
         id = id,
         name = name,
         balance = BigDecimal(balance),
         currency = currency,
+        currencySymbol = "$",  // Default for backward compatibility
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        isDeleted = isDeleted
+    )
+}
+
+fun WalletWithCurrencySymbol.toDomain(): Wallet {
+    return Wallet(
+        id = id,
+        name = name,
+        balance = BigDecimal(balance),
+        currency = currency,
+        currencySymbol = currencySymbol ?: "$",  // Fallback to $ if null
         createdAt = createdAt,
         updatedAt = updatedAt,
         isDeleted = isDeleted

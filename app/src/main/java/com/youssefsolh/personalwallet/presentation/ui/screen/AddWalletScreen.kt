@@ -10,14 +10,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.youssefsolh.personalwallet.domain.model.Currency
+import com.youssefsolh.personalwallet.presentation.ui.common.CurrencyDropdown
 import com.youssefsolh.personalwallet.presentation.viewmodel.AddWalletViewModel
+import com.youssefsolh.personalwallet.presentation.viewmodel.CurrencyViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddWalletScreen(
     walletId: String? = null,
     onNavigateBack: () -> Unit,
-    viewModel: AddWalletViewModel = hiltViewModel()
+    viewModel: AddWalletViewModel = hiltViewModel(),
+    currencyViewModel: CurrencyViewModel = hiltViewModel()
 ) {
     val isEditMode = walletId != null
 
@@ -25,10 +30,11 @@ fun AddWalletScreen(
     var nameError by remember { mutableStateOf<String?>(null) }
     var initialBalance by remember { mutableStateOf("") }
     var balanceError by remember { mutableStateOf<String?>(null) }
-    var currency by remember { mutableStateOf("USD") }
+    var selectedCurrency by remember { mutableStateOf<Currency?>(null) }
     var currencyError by remember { mutableStateOf<String?>(null) }
 
     val uiState by viewModel.uiState.collectAsState()
+    val currencyUiState by currencyViewModel.uiState.collectAsStateWithLifecycle()
 
     // Load wallet data if editing
     LaunchedEffect(walletId) {
@@ -37,12 +43,22 @@ fun AddWalletScreen(
         }
     }
 
+    // Set default currency when currencies are loaded (only if not editing)
+    LaunchedEffect(currencyUiState.defaultCurrency) {
+        if (!isEditMode && selectedCurrency == null) {
+            currencyUiState.defaultCurrency?.let {
+                selectedCurrency = it
+            }
+        }
+    }
+
     // Populate form with wallet data when loaded
-    LaunchedEffect(uiState.wallet) {
+    LaunchedEffect(uiState.wallet, currencyUiState.currencies) {
         uiState.wallet?.let { wallet ->
             name = wallet.name
             initialBalance = wallet.balance.toString()
-            currency = wallet.currency
+            // Find the currency object from the code
+            selectedCurrency = currencyUiState.currencies.find { it.code == wallet.currency }
         }
     }
 
@@ -95,24 +111,23 @@ fun AddWalletScreen(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
-                prefix = { Text("$") },
+                prefix = { Text(selectedCurrency?.symbol ?: "$") },
                 isError = balanceError != null,
                 supportingText = balanceError?.let { { Text(it) } },
                 placeholder = { Text("0.00") }
             )
 
-            OutlinedTextField(
-                value = currency,
-                onValueChange = {
-                    currency = it.uppercase()
+            CurrencyDropdown(
+                selectedCurrency = selectedCurrency,
+                currencies = currencyUiState.currencies,
+                onCurrencySelected = {
+                    selectedCurrency = it
                     currencyError = null
                 },
-                label = { Text("Currency") },
+                label = "Currency",
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
                 isError = currencyError != null,
-                supportingText = currencyError?.let { { Text(it) } },
-                placeholder = { Text("USD") }
+                supportingText = currencyError
             )
 
             if (uiState.error != null) {
@@ -161,27 +176,25 @@ fun AddWalletScreen(
                         }
                     }
 
-                    if (currency.isBlank()) {
-                        currencyError = "Currency is required"
-                        hasError = true
-                    } else if (currency.length != 3) {
-                        currencyError = "Currency must be 3 letters (e.g., USD, EUR)"
+                    if (selectedCurrency == null) {
+                        currencyError = "Please select a currency"
                         hasError = true
                     }
 
                     if (!hasError) {
+                        val currencyCode = selectedCurrency?.code ?: "USD"
                         if (isEditMode && walletId != null) {
                             viewModel.updateWallet(
                                 id = walletId,
                                 name = name.trim(),
                                 balance = initialBalance.toDouble(),
-                                currency = currency.uppercase()
+                                currency = currencyCode
                             )
                         } else {
                             viewModel.createWallet(
                                 name = name.trim(),
                                 initialBalance = initialBalance.toDouble(),
-                                currency = currency.uppercase()
+                                currency = currencyCode
                             )
                         }
                     }

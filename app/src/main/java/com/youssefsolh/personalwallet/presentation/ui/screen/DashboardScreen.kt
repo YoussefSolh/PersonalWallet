@@ -90,7 +90,10 @@ fun DashboardScreen(
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "$${uiState.totalBalance}",
+                        text = com.youssefsolh.personalwallet.domain.model.Wallet.formatAmountWithCurrency(
+                            uiState.totalBalance,
+                            uiState.defaultCurrency?.symbol ?: "$"
+                        ),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -188,7 +191,7 @@ fun DashboardScreen(
                                         )
                                     }
                                     Text(
-                                        text = "$${wallet.balance}",
+                                        text = wallet.getFormattedBalance(),
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
