@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         CurrencyEntity::class
     ],
-    version = 6,
+    version = WalletDatabase.VERSION,
     exportSchema = false
 )
 abstract class WalletDatabase : RoomDatabase() {
@@ -39,6 +39,7 @@ abstract class WalletDatabase : RoomDatabase() {
     companion object {
         private const val TAG = "WalletDatabase"
         const val DATABASE_NAME = "wallet_database"
+        const val VERSION = 7
 
         fun buildDatabase(
             context: Context,
@@ -109,7 +110,7 @@ abstract class WalletDatabase : RoomDatabase() {
                         }
                     }
                 })
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .build()
         }
 
@@ -451,6 +452,31 @@ abstract class WalletDatabase : RoomDatabase() {
                     Log.e(TAG, "MIGRATION_5_6 FAILED: ${e.message}", e)
                     throw e
                 }
+            }
+        }
+    
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                Log.i(TAG, "Starting MIGRATION_6_7: Adding destination_amount to transactions")
+                database.execSQL("ALTER TABLE transactions ADD COLUMN destination_amount TEXT")
+
+                // Same-currency transfers credited exactly the transferred amount
+                database.execSQL("UPDATE transactions SET destination_amount = amount WHERE type = 'TRANSFER'")
+
+                // Cross-currency transfers credited amount / fromRate * toRate (see AddTransactionUseCase)
+                database.execSQL("""
+                    UPDATE transactions
+                    SET destination_amount = printf('%.2f',
+                        CAST(amount AS REAL)
+                        / CAST((SELECT c.exchange_rate_to_default FROM wallets w JOIN currencies c ON c.code = w.currency WHERE w.id = transactions.fromWalletId) AS REAL)
+                        * CAST((SELECT c.exchange_rate_to_default FROM wallets w JOIN currencies c ON c.code = w.currency WHERE w.id = transactions.toWalletId) AS REAL))
+                    WHERE type = 'TRANSFER'
+                    AND (SELECT currency FROM wallets WHERE id = transactions.fromWalletId)
+                        <> (SELECT currency FROM wallets WHERE id = transactions.toWalletId)
+                    AND (SELECT c.exchange_rate_to_default FROM wallets w JOIN currencies c ON c.code = w.currency WHERE w.id = transactions.fromWalletId) IS NOT NULL
+                    AND (SELECT c.exchange_rate_to_default FROM wallets w JOIN currencies c ON c.code = w.currency WHERE w.id = transactions.toWalletId) IS NOT NULL
+                """)
+                Log.i(TAG, "MIGRATION_6_7 completed successfully")
             }
         }
     }

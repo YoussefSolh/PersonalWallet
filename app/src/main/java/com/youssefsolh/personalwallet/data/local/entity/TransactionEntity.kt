@@ -37,7 +37,10 @@ data class TransactionEntity(
     val amountInDefaultCurrency: String = "0.0",  // Converted amount (stored as String for precision)
 
     @ColumnInfo(name = "exchange_rate")
-    val exchangeRate: String = "1.0"  // Rate used for conversion (immutable, stored as String for precision)
+    val exchangeRate: String = "1.0",  // Rate used for conversion (immutable, stored as String for precision)
+
+    @ColumnInfo(name = "destination_amount")
+    val destinationAmount: String? = null  // Amount credited to toWalletId for transfers
 )
 
 fun TransactionEntity.toDomain(): Transaction {
@@ -59,7 +62,8 @@ fun TransactionEntity.toDomain(): Transaction {
         originalCurrency = originalCurrency,
         defaultCurrency = defaultCurrency,
         amountInDefaultCurrency = BigDecimal(amountInDefaultCurrency),
-        exchangeRate = BigDecimal(exchangeRate)
+        exchangeRate = BigDecimal(exchangeRate),
+        destinationAmount = destinationAmount?.let { BigDecimal(it) }
     )
 }
 
@@ -83,6 +87,7 @@ fun Transaction.toEntity(userId: String): TransactionEntity {
         originalCurrency = originalCurrency,
         defaultCurrency = defaultCurrency,
         amountInDefaultCurrency = amountInDefaultCurrency.toString(),
-        exchangeRate = exchangeRate.toString()
+        exchangeRate = exchangeRate.toString(),
+        destinationAmount = destinationAmount?.toPlainString()
     )
 }

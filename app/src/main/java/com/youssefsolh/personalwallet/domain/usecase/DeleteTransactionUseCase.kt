@@ -1,62 +1,35 @@
 package com.youssefsolh.personalwallet.domain.usecase
 
 import com.youssefsolh.personalwallet.domain.model.Transaction
-import com.youssefsolh.personalwallet.domain.model.TransactionType
 import com.youssefsolh.personalwallet.domain.repository.TransactionRepository
-import com.youssefsolh.personalwallet.domain.repository.WalletRepository
-import java.math.BigDecimal
+import com.youssefsolh.personalwallet.domain.repository.TransactionRunner
 import javax.inject.Inject
 
 class DeleteTransactionUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    private val walletRepository: WalletRepository
+    private val balanceUpdater: WalletBalanceUpdater,
+    private val transactionRunner: TransactionRunner
 ) {
     suspend operator fun invoke(transaction: Transaction): Result<Unit> {
         return try {
-            // Reverse the transaction's effect on wallet balances
-            when (transaction.type) {
-                TransactionType.INCOME -> {
-                    transaction.toWalletId?.let { walletId ->
-                        updateWalletBalance(walletId, transaction.amount.negate())
-                    }
-                }
-                TransactionType.EXPENSE -> {
-                    transaction.fromWalletId?.let { walletId ->
-                        updateWalletBalance(walletId, transaction.amount)
-                    }
-                }
-                TransactionType.TRANSFER -> {
-                    transaction.fromWalletId?.let { fromWalletId ->
-                        updateWalletBalance(fromWalletId, transaction.amount)
-                    }
-                    transaction.toWalletId?.let { toWalletId ->
-                        updateWalletBalance(toWalletId, transaction.amount.negate())
-                    }
-                }
-            }
+            transactionRunner.runInTransaction {
+                // Reverse what is actually stored. Deleted rows are not returned, so a
+                // repeated delete is a no-op instead of reversing the balance twice.
+                val stored = transactionRepository.getTransactionById(transaction.id)
+                    ?: return@runInTransaction
+                balanceUpdater.reverse(stored)
 
-            // Mark transaction as deleted (soft delete)
-            transactionRepository.updateTransaction(
-                transaction.copy(
-                    isDeleted = true,
-                    updatedAt = System.currentTimeMillis()
+                // Mark transaction as deleted (soft delete)
+                transactionRepository.updateTransaction(
+                    stored.copy(
+                        isDeleted = true,
+                        updatedAt = System.currentTimeMillis()
+                    )
                 )
-            )
-
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
-        }
-    }
-
-    private suspend fun updateWalletBalance(walletId: String, amount: BigDecimal) {
-        val wallet = walletRepository.getWalletById(walletId)
-        wallet?.let {
-            val updatedWallet = it.copy(
-                balance = it.balance + amount,
-                updatedAt = System.currentTimeMillis()
-            )
-            walletRepository.updateWallet(updatedWallet)
         }
     }
 }

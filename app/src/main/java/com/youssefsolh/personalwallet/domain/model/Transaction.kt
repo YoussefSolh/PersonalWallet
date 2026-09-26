@@ -24,5 +24,9 @@ data class Transaction(
     val originalCurrency: String = "USD", // ISO code of the wallet's currency
     val defaultCurrency: String = "USD", // ISO code of default currency at time of transaction
     val amountInDefaultCurrency: @Serializable(with = BigDecimalSerializer::class) BigDecimal = BigDecimal.ZERO, // Converted amount
-    val exchangeRate: @Serializable(with = BigDecimalSerializer::class) BigDecimal = BigDecimal.ONE // Immutable rate at time of transaction
+    val exchangeRate: @Serializable(with = BigDecimalSerializer::class) BigDecimal = BigDecimal.ONE, // Immutable rate at time of transaction
+
+    // Amount credited to toWalletId for transfers, in the destination wallet's currency.
+    // Stored so edits and deletes reverse exactly what was credited.
+    val destinationAmount: @Serializable(with = BigDecimalSerializer::class) BigDecimal? = null
 )
