@@ -73,7 +73,7 @@ class AddWalletViewModelTest {
 
         coEvery {
             createWalletUseCase(name, BigDecimal.valueOf(initialBalance), currency)
-        } returns Result.success(Unit)
+        } returns Unit
 
         // When
         viewModel.createWallet(name, initialBalance, currency)
@@ -99,7 +99,7 @@ class AddWalletViewModelTest {
 
         coEvery {
             createWalletUseCase(name, BigDecimal.ZERO, currency)
-        } returns Result.success(Unit)
+        } returns Unit
 
         // When
         viewModel.createWallet(name, initialBalance, currency)
@@ -194,7 +194,7 @@ class AddWalletViewModelTest {
                 it.balance == BigDecimal.valueOf(balance) &&
                 it.currency == currency
             })
-        } returns Result.success(Unit)
+        } returns Unit
 
         // When
         viewModel.updateWallet(walletId, name, balance, currency)
@@ -252,7 +252,7 @@ class AddWalletViewModelTest {
         } coAnswers {
             // State should be loading at this point
             assertThat(viewModel.uiState.value.isLoading).isTrue()
-            Result.success(Unit)
+            Unit
         }
 
         // When
@@ -273,7 +273,7 @@ class AddWalletViewModelTest {
 
         coEvery {
             updateWalletUseCase(match { it.currency == "EUR" })
-        } returns Result.success(Unit)
+        } returns Unit
 
         // When
         viewModel.updateWallet(walletId, name, balance, currency)
