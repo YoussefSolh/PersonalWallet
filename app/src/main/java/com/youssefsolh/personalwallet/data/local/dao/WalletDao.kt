@@ -45,6 +45,6 @@ interface WalletDao {
     @Query("UPDATE wallets SET isDeleted = 1, updatedAt = :timestamp WHERE id = :id")
     suspend fun deleteWallet(id: String, timestamp: Long = System.currentTimeMillis())
 
-    @Query("DELETE FROM wallets")
-    suspend fun deleteAllWallets()
+    @Query("DELETE FROM wallets WHERE userId = :userId")
+    suspend fun deleteAllWalletsForUser(userId: String)
 }

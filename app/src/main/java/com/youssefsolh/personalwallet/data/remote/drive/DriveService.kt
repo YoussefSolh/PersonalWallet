@@ -28,7 +28,11 @@ class DriveService @Inject constructor(
         private const val TAG = "DriveService"
     }
 
-    private val json = Json { prettyPrint = true }
+    private val json = Json {
+        prettyPrint = true
+        // Backups made by newer app versions may carry fields this version does not know
+        ignoreUnknownKeys = true
+    }
 
     private fun getDriveService(accountName: String): Drive {
         Log.d(TAG, "Creating Drive service for account: $accountName")

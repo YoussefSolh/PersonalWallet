@@ -52,8 +52,8 @@ interface TransactionDao {
     @Query("UPDATE transactions SET debtSettled = 1, relatedTransactionId = :settlementId, updatedAt = :timestamp WHERE id = :debtId")
     suspend fun settleDebt(debtId: String, settlementId: String, timestamp: Long = System.currentTimeMillis())
 
-    @Query("DELETE FROM transactions")
-    suspend fun deleteAllTransactions()
+    @Query("DELETE FROM transactions WHERE userId = :userId")
+    suspend fun deleteAllTransactionsForUser(userId: String)
 
     @Query("""
         SELECT categoryId, SUM(CAST(amount AS REAL)) as total, COUNT(*) as count

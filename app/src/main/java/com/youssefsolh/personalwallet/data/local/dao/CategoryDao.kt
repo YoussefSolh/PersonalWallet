@@ -27,6 +27,7 @@ interface CategoryDao {
     @Query("UPDATE categories SET isDeleted = 1, updatedAt = :timestamp WHERE id = :id")
     suspend fun deleteCategory(id: String, timestamp: Long = System.currentTimeMillis())
 
-    @Query("DELETE FROM categories")
-    suspend fun deleteAllCategories()
+    // Never matches the shared 'default' categories
+    @Query("DELETE FROM categories WHERE userId = :userId")
+    suspend fun deleteAllCategoriesForUser(userId: String)
 }

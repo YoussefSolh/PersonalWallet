@@ -13,6 +13,7 @@ import com.youssefsolh.personalwallet.domain.model.BackupData
 import com.youssefsolh.personalwallet.domain.repository.AuthRepository
 import com.youssefsolh.personalwallet.domain.repository.BackupRepository
 import com.youssefsolh.personalwallet.domain.repository.DriveBackupInfo
+import com.youssefsolh.personalwallet.domain.repository.TransactionRunner
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,7 +26,8 @@ class BackupRepositoryImpl @Inject constructor(
     private val driveService: DriveService,
     private val authRepository: AuthRepository,
     private val authService: AuthService,
-    private val currentUserProvider: CurrentUserProvider
+    private val currentUserProvider: CurrentUserProvider,
+    private val transactionRunner: TransactionRunner
 ) : BackupRepository {
 
     companion object {
@@ -98,22 +100,27 @@ class BackupRepositoryImpl @Inject constructor(
         return try {
             val userId = currentUserProvider.getCurrentUserId()
 
-            // Clear existing data
-            walletDao.deleteAllWallets()
-            transactionDao.deleteAllTransactions()
-            categoryDao.deleteAllCategories()
+            // All-or-nothing: a failure part way through leaves the existing data intact
+            transactionRunner.runInTransaction {
+                // Clear only the current user's data; other accounts on this device are untouched
+                walletDao.deleteAllWalletsForUser(userId)
+                transactionDao.deleteAllTransactionsForUser(userId)
+                categoryDao.deleteAllCategoriesForUser(userId)
 
-            // Insert backup data
-            backupData.wallets.forEach { wallet ->
-                walletDao.insertWallet(wallet.toEntity(userId))
-            }
+                // Insert backup data
+                backupData.wallets.forEach { wallet ->
+                    walletDao.insertWallet(wallet.toEntity(userId))
+                }
 
-            backupData.transactions.forEach { transaction ->
-                transactionDao.insertTransaction(transaction.toEntity(userId))
-            }
+                backupData.transactions.forEach { transaction ->
+                    transactionDao.insertTransaction(transaction.toEntity(userId))
+                }
 
-            backupData.categories.forEach { category ->
-                categoryDao.insertCategory(category.toEntity(userId))
+                // Default categories are shared rows (userId = 'default') that already exist;
+                // re-inserting them under this user would take them away from everyone else.
+                backupData.categories.filterNot { it.isDefault }.forEach { category ->
+                    categoryDao.insertCategory(category.toEntity(userId))
+                }
             }
 
             Result.success(Unit)
