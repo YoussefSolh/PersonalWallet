@@ -168,13 +168,13 @@ class WalletRepositoryImplTest {
     @Test
     fun `deleteWallet should call dao with wallet id`() = runTest {
         // Given
-        coEvery { walletDao.deleteWallet("wallet1") } returns Unit
+        coEvery { walletDao.deleteWallet("wallet1", any()) } returns Unit
 
         // When
         repository.deleteWallet("wallet1")
 
         // Then
-        coVerify { walletDao.deleteWallet("wallet1") }
+        coVerify { walletDao.deleteWallet("wallet1", any()) }
     }
 
     @Test

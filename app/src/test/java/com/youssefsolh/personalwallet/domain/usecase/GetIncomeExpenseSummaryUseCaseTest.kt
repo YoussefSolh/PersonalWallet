@@ -49,9 +49,9 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.totalIncome).isEqualTo(BigDecimal("5000.0"))
-        assertThat(summary.totalExpense).isEqualTo(BigDecimal("3000.0"))
-        assertThat(summary.netIncome).isEqualTo(BigDecimal("2000.0"))
+        assertThat(summary.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal("5000.0"))
+        assertThat(summary.totalExpense).isEquivalentAccordingToCompareTo(BigDecimal("3000.0"))
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal("2000.0"))
         assertThat(summary.period).isEqualTo("January 2024")
     }
 
@@ -76,9 +76,9 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.totalIncome).isEqualTo(BigDecimal("2000.0"))
-        assertThat(summary.totalExpense).isEqualTo(BigDecimal("3500.0"))
-        assertThat(summary.netIncome).isEqualTo(BigDecimal("-1500.0"))
+        assertThat(summary.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal("2000.0"))
+        assertThat(summary.totalExpense).isEquivalentAccordingToCompareTo(BigDecimal("3500.0"))
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal("-1500.0"))
     }
 
     @Test
@@ -102,9 +102,9 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.totalIncome).isEqualTo(BigDecimal.ZERO)
-        assertThat(summary.totalExpense).isEqualTo(BigDecimal.ZERO)
-        assertThat(summary.netIncome).isEqualTo(BigDecimal.ZERO)
+        assertThat(summary.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal.ZERO)
+        assertThat(summary.totalExpense).isEquivalentAccordingToCompareTo(BigDecimal.ZERO)
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal.ZERO)
     }
 
     @Test
@@ -128,9 +128,9 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.totalIncome).isEqualTo(BigDecimal("5000.0"))
-        assertThat(summary.totalExpense).isEqualTo(BigDecimal.ZERO)
-        assertThat(summary.netIncome).isEqualTo(BigDecimal("5000.0"))
+        assertThat(summary.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal("5000.0"))
+        assertThat(summary.totalExpense).isEquivalentAccordingToCompareTo(BigDecimal.ZERO)
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal("5000.0"))
     }
 
     @Test
@@ -154,9 +154,9 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.totalIncome).isEqualTo(BigDecimal.ZERO)
-        assertThat(summary.totalExpense).isEqualTo(BigDecimal("2000.0"))
-        assertThat(summary.netIncome).isEqualTo(BigDecimal("-2000.0"))
+        assertThat(summary.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal.ZERO)
+        assertThat(summary.totalExpense).isEquivalentAccordingToCompareTo(BigDecimal("2000.0"))
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal("-2000.0"))
     }
 
     @Test
@@ -180,10 +180,10 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.totalIncome).isEqualTo(BigDecimal("1234.56"))
-        assertThat(summary.totalExpense).isEqualTo(BigDecimal("789.12"))
+        assertThat(summary.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal("1234.56"))
+        assertThat(summary.totalExpense).isEquivalentAccordingToCompareTo(BigDecimal("789.12"))
         // Net income = 1234.56 - 789.12 = 445.44
-        assertThat(summary.netIncome).isEqualTo(BigDecimal("445.44"))
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal("445.44"))
     }
 
     @Test
@@ -207,9 +207,9 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.totalIncome).isEqualTo(BigDecimal("999999.99"))
-        assertThat(summary.totalExpense).isEqualTo(BigDecimal("500000.50"))
-        assertThat(summary.netIncome).isEqualTo(BigDecimal("499999.49"))
+        assertThat(summary.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal("999999.99"))
+        assertThat(summary.totalExpense).isEquivalentAccordingToCompareTo(BigDecimal("500000.50"))
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal("499999.49"))
     }
 
     @Test
@@ -275,8 +275,8 @@ class GetIncomeExpenseSummaryUseCaseTest {
         val result2 = getIncomeExpenseSummaryUseCase(5000L, 10000L, "Period 2")
 
         // Then
-        assertThat(result1.getOrNull()?.totalIncome).isEqualTo(BigDecimal("1000.0"))
-        assertThat(result2.getOrNull()?.totalIncome).isEqualTo(BigDecimal("2000.0"))
+        assertThat(result1.getOrNull()?.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal("1000.0"))
+        assertThat(result2.getOrNull()?.totalIncome).isEquivalentAccordingToCompareTo(BigDecimal("2000.0"))
     }
 
     @Test
@@ -300,7 +300,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         // Then
         assertThat(result.isSuccess).isTrue()
         val summary = result.getOrNull()!!
-        assertThat(summary.netIncome).isEqualTo(BigDecimal.ZERO)
+        assertThat(summary.netIncome).isEquivalentAccordingToCompareTo(BigDecimal.ZERO)
     }
 
     @Test

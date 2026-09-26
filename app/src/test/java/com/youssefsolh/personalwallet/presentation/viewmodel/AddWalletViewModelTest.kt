@@ -98,7 +98,7 @@ class AddWalletViewModelTest {
         val currency = "USD"
 
         coEvery {
-            createWalletUseCase(name, BigDecimal.ZERO, currency)
+            createWalletUseCase(name, match { it.signum() == 0 }, currency)
         } returns Unit
 
         // When
