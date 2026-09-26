@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+   Backup rules for Android 12 and higher. See backup_rules.xml for why the encrypted
+   database and its key prefs are excluded.
+-->
 <data-extraction-rules>
     <cloud-backup>
-        <include domain="sharedpref" path="."/>
-        <exclude domain="sharedpref" path="device.xml"/>
+        <include domain="sharedpref" path="." />
+        <exclude domain="sharedpref" path="device.xml" />
+        <exclude domain="sharedpref" path="encrypted_db_prefs.xml" />
+        <exclude domain="sharedpref" path="db_recovery.xml" />
     </cloud-backup>
     <device-transfer>
-        <include domain="sharedpref" path="."/>
-        <exclude domain="sharedpref" path="device.xml"/>
+        <include domain="sharedpref" path="." />
+        <exclude domain="sharedpref" path="device.xml" />
+        <exclude domain="sharedpref" path="encrypted_db_prefs.xml" />
+        <exclude domain="sharedpref" path="db_recovery.xml" />
     </device-transfer>
 </data-extraction-rules>

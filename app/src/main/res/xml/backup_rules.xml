@@ -1,3 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+   Backup rules for Android 11 and lower.
+   The database is encrypted with a key held in the Android Keystore, which is never
+   backed up. Restoring the key prefs or the database onto another device leaves them
+   unreadable, so both are excluded. Use the in-app Google Drive backup instead.
+-->
 <full-backup-content>
+    <exclude domain="sharedpref" path="encrypted_db_prefs.xml" />
+    <exclude domain="sharedpref" path="db_recovery.xml" />
+    <exclude domain="database" path="." />
 </full-backup-content>
