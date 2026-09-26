@@ -2,6 +2,7 @@ package com.youssefsolh.personalwallet.domain.usecase
 
 import com.google.common.truth.Truth.assertThat
 import com.youssefsolh.personalwallet.data.local.dao.IncomeExpenseSummaryEntity
+import com.youssefsolh.personalwallet.data.local.CurrentUserProvider
 import com.youssefsolh.personalwallet.data.local.dao.TransactionDao
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -18,10 +19,13 @@ class GetIncomeExpenseSummaryUseCaseTest {
 
     private lateinit var getIncomeExpenseSummaryUseCase: GetIncomeExpenseSummaryUseCase
     private val transactionDao: TransactionDao = mockk()
+    private val currentUserProvider: CurrentUserProvider = mockk {
+        coEvery { getCurrentUserId() } returns "user1"
+    }
 
     @Before
     fun setup() {
-        getIncomeExpenseSummaryUseCase = GetIncomeExpenseSummaryUseCase(transactionDao)
+        getIncomeExpenseSummaryUseCase = GetIncomeExpenseSummaryUseCase(transactionDao, currentUserProvider)
     }
 
     @Test
@@ -36,7 +40,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -63,7 +67,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -89,7 +93,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -115,7 +119,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -141,7 +145,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -167,7 +171,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -194,7 +198,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -217,7 +221,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         val exception = RuntimeException("Database error")
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } throws exception
 
         // When
@@ -237,7 +241,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(any(), any())
+            transactionDao.getIncomeExpenseSummary("user1", any(), any())
         } returns summaryEntity
 
         // When - Test different period strings
@@ -260,10 +264,10 @@ class GetIncomeExpenseSummaryUseCaseTest {
         val summaryEntity2 = IncomeExpenseSummaryEntity(2000.0, 1500.0)
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(0L, 1000L)
+            transactionDao.getIncomeExpenseSummary("user1", 0L, 1000L)
         } returns summaryEntity1
         coEvery {
-            transactionDao.getIncomeExpenseSummary(5000L, 10000L)
+            transactionDao.getIncomeExpenseSummary("user1", 5000L, 10000L)
         } returns summaryEntity2
 
         // When
@@ -287,7 +291,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         )
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(startDate, endDate)
+            transactionDao.getIncomeExpenseSummary("user1", startDate, endDate)
         } returns summaryEntity
 
         // When
@@ -306,7 +310,7 @@ class GetIncomeExpenseSummaryUseCaseTest {
         val customPeriod = "Q1 2024 (January-March)"
 
         coEvery {
-            transactionDao.getIncomeExpenseSummary(any(), any())
+            transactionDao.getIncomeExpenseSummary("user1", any(), any())
         } returns summaryEntity
 
         // When

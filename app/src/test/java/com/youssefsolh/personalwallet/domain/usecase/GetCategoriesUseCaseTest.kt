@@ -26,14 +26,14 @@ class GetCategoriesUseCaseTest {
             id = "cat1",
             name = "Food",
             icon = "🍔",
-            color = 0xFF0000,
+            color = "#FF0000",
             type = TransactionType.EXPENSE
         ),
         Category(
             id = "cat2",
             name = "Transport",
             icon = "🚗",
-            color = 0x00FF00,
+            color = "#00FF00",
             type = TransactionType.EXPENSE
         )
     )
@@ -43,14 +43,14 @@ class GetCategoriesUseCaseTest {
             id = "cat3",
             name = "Salary",
             icon = "💰",
-            color = 0x0000FF,
+            color = "#0000FF",
             type = TransactionType.INCOME
         ),
         Category(
             id = "cat4",
             name = "Bonus",
             icon = "🎁",
-            color = 0xFFFF00,
+            color = "#FFFF00",
             type = TransactionType.INCOME
         )
     )
@@ -140,7 +140,7 @@ class GetCategoriesUseCaseTest {
     fun `invoke should return single category`() = runTest {
         // Given
         val singleCategory = listOf(
-            Category("cat1", "Food", "🍔", 0xFF0000, TransactionType.EXPENSE)
+            Category("cat1", "Food", "🍔", "#FF0000", TransactionType.EXPENSE)
         )
         coEvery {
             categoryRepository.getCategoriesByType(TransactionType.EXPENSE)
@@ -163,9 +163,9 @@ class GetCategoriesUseCaseTest {
     fun `invoke should preserve category order from repository`() = runTest {
         // Given - Categories in specific order
         val orderedCategories = listOf(
-            Category("cat3", "Shopping", "🛍️", 0xAAAAAA, TransactionType.EXPENSE),
-            Category("cat1", "Food", "🍔", 0xFF0000, TransactionType.EXPENSE),
-            Category("cat2", "Transport", "🚗", 0x00FF00, TransactionType.EXPENSE)
+            Category("cat3", "Shopping", "🛍️", "#AAAAAA", TransactionType.EXPENSE),
+            Category("cat1", "Food", "🍔", "#FF0000", TransactionType.EXPENSE),
+            Category("cat2", "Transport", "🚗", "#00FF00", TransactionType.EXPENSE)
         )
         coEvery {
             categoryRepository.getCategoriesByType(TransactionType.EXPENSE)
@@ -188,11 +188,11 @@ class GetCategoriesUseCaseTest {
     fun `invoke should handle repository emitting multiple updates`() = runTest {
         // Given - Repository emits updates
         val initial = listOf(
-            Category("cat1", "Food", "🍔", 0xFF0000, TransactionType.EXPENSE)
+            Category("cat1", "Food", "🍔", "#FF0000", TransactionType.EXPENSE)
         )
         val updated = listOf(
-            Category("cat1", "Food", "🍔", 0xFF0000, TransactionType.EXPENSE),
-            Category("cat2", "Transport", "🚗", 0x00FF00, TransactionType.EXPENSE)
+            Category("cat1", "Food", "🍔", "#FF0000", TransactionType.EXPENSE),
+            Category("cat2", "Transport", "🚗", "#00FF00", TransactionType.EXPENSE)
         )
 
         coEvery {
@@ -217,9 +217,9 @@ class GetCategoriesUseCaseTest {
     fun `invoke should handle categories with different colors`() = runTest {
         // Given
         val colorfulCategories = listOf(
-            Category("cat1", "Red", "🔴", 0xFF0000, TransactionType.EXPENSE),
-            Category("cat2", "Green", "🟢", 0x00FF00, TransactionType.EXPENSE),
-            Category("cat3", "Blue", "🔵", 0x0000FF, TransactionType.EXPENSE)
+            Category("cat1", "Red", "🔴", "#FF0000", TransactionType.EXPENSE),
+            Category("cat2", "Green", "🟢", "#00FF00", TransactionType.EXPENSE),
+            Category("cat3", "Blue", "🔵", "#0000FF", TransactionType.EXPENSE)
         )
         coEvery {
             categoryRepository.getCategoriesByType(TransactionType.EXPENSE)
@@ -231,9 +231,9 @@ class GetCategoriesUseCaseTest {
 
             // Then
             assertThat(result).hasSize(3)
-            assertThat(result[0].color).isEqualTo(0xFF0000)
-            assertThat(result[1].color).isEqualTo(0x00FF00)
-            assertThat(result[2].color).isEqualTo(0x0000FF)
+            assertThat(result[0].color).isEqualTo("#FF0000")
+            assertThat(result[1].color).isEqualTo("#00FF00")
+            assertThat(result[2].color).isEqualTo("#0000FF")
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -243,9 +243,9 @@ class GetCategoriesUseCaseTest {
     fun `invoke should handle categories with different icons`() = runTest {
         // Given
         val categories = listOf(
-            Category("cat1", "Food", "🍔", 0xFF0000, TransactionType.EXPENSE),
-            Category("cat2", "Shopping", "🛍️", 0x00FF00, TransactionType.EXPENSE),
-            Category("cat3", "Bills", "💵", 0x0000FF, TransactionType.EXPENSE)
+            Category("cat1", "Food", "🍔", "#FF0000", TransactionType.EXPENSE),
+            Category("cat2", "Shopping", "🛍️", "#00FF00", TransactionType.EXPENSE),
+            Category("cat3", "Bills", "💵", "#0000FF", TransactionType.EXPENSE)
         )
         coEvery {
             categoryRepository.getCategoriesByType(TransactionType.EXPENSE)

@@ -23,7 +23,7 @@ class CreateCategoryUseCaseTest {
     @Test
     fun `invoke should insert expense category`() = runTest {
         // Given
-        val category = Category("cat1", "Food", "🍔", 0xFF0000, TransactionType.EXPENSE)
+        val category = Category("cat1", "Food", "🍔", "#FF0000", TransactionType.EXPENSE)
         coEvery { categoryRepository.insertCategory(category) } returns Unit
 
         // When
@@ -36,7 +36,7 @@ class CreateCategoryUseCaseTest {
     @Test
     fun `invoke should insert income category`() = runTest {
         // Given
-        val category = Category("cat1", "Salary", "💰", 0x00FF00, TransactionType.INCOME)
+        val category = Category("cat1", "Salary", "💰", "#00FF00", TransactionType.INCOME)
         coEvery { categoryRepository.insertCategory(category) } returns Unit
 
         // When
@@ -49,13 +49,13 @@ class CreateCategoryUseCaseTest {
     @Test
     fun `invoke should handle different colors`() = runTest {
         // Given
-        val category = Category("cat1", "Test", "✅", 0xABCDEF, TransactionType.EXPENSE)
+        val category = Category("cat1", "Test", "✅", "#ABCDEF", TransactionType.EXPENSE)
         coEvery { categoryRepository.insertCategory(any()) } returns Unit
 
         // When
         createCategoryUseCase(category)
 
         // Then
-        coVerify { categoryRepository.insertCategory(match { it.color == 0xABCDEF }) }
+        coVerify { categoryRepository.insertCategory(match { it.color == "#ABCDEF" }) }
     }
 }

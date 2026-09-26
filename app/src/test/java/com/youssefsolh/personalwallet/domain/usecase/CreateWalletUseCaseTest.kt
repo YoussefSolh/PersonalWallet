@@ -5,8 +5,11 @@ import com.youssefsolh.personalwallet.domain.repository.WalletRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import junit.framework.TestCase.assertTrue
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
@@ -25,111 +28,39 @@ class CreateWalletUseCaseTest {
     }
 
     @Test
-    fun `creating wallet with valid data should succeed`() = runTest {
-        // Given
-        val wallet = Wallet(
-            id = "wallet1",
-            name = "Test Wallet",
-            balance = BigDecimal("1000"),
-            currency = "USD",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
+    fun `creating wallet inserts it with the given fields`() = runTest {
+        val inserted = slot<Wallet>()
+        coEvery { walletRepository.insertWallet(capture(inserted)) } returns Unit
 
-        coEvery { walletRepository.insertWallet(wallet) } returns Unit
+        createWalletUseCase("Test Wallet", BigDecimal("1000.99"), "EUR")
 
-        // When
-        val result = createWalletUseCase(wallet)
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify { walletRepository.insertWallet(wallet) }
+        assertEquals("Test Wallet", inserted.captured.name)
+        assertEquals(BigDecimal("1000.99"), inserted.captured.balance)
+        assertEquals("EUR", inserted.captured.currency)
+        assertTrue(inserted.captured.id.isNotBlank())
     }
 
     @Test
-    fun `creating wallet with zero balance should succeed`() = runTest {
-        // Given
-        val wallet = Wallet(
-            id = "wallet1",
-            name = "Empty Wallet",
-            balance = BigDecimal.ZERO,
-            currency = "USD",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
+    fun `each wallet gets a unique id`() = runTest {
+        val ids = mutableListOf<String>()
+        coEvery { walletRepository.insertWallet(any()) } answers { ids += firstArg<Wallet>().id }
 
-        coEvery { walletRepository.insertWallet(wallet) } returns Unit
+        createWalletUseCase("A", BigDecimal.ZERO, "USD")
+        createWalletUseCase("B", BigDecimal.ZERO, "USD")
 
-        // When
-        val result = createWalletUseCase(wallet)
+        assertNotEquals(ids[0], ids[1])
+    }
 
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify { walletRepository.insertWallet(wallet) }
+    @Test(expected = IllegalStateException::class)
+    fun `repository failure propagates`() = runTest {
+        coEvery { walletRepository.insertWallet(any()) } throws IllegalStateException("Database error")
+        createWalletUseCase("Test", BigDecimal.ONE, "USD")
     }
 
     @Test
-    fun `creating wallet with different currency should succeed`() = runTest {
-        // Given
-        val wallet = Wallet(
-            id = "wallet1",
-            name = "Euro Wallet",
-            balance = BigDecimal("500"),
-            currency = "EUR",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
-
-        coEvery { walletRepository.insertWallet(wallet) } returns Unit
-
-        // When
-        val result = createWalletUseCase(wallet)
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify { walletRepository.insertWallet(wallet) }
-    }
-
-    @Test
-    fun `creating wallet with repository error should return failure`() = runTest {
-        // Given
-        val wallet = Wallet(
-            id = "wallet1",
-            name = "Test Wallet",
-            balance = BigDecimal("1000"),
-            currency = "USD",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
-
-        coEvery { walletRepository.insertWallet(wallet) } throws Exception("Database error")
-
-        // When
-        val result = createWalletUseCase(wallet)
-
-        // Then
-        assertTrue(result.isFailure)
-    }
-
-    @Test
-    fun `creating wallet with large balance should succeed`() = runTest {
-        // Given
-        val wallet = Wallet(
-            id = "wallet1",
-            name = "Large Balance Wallet",
-            balance = BigDecimal("1000000.99"),
-            currency = "USD",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
-
-        coEvery { walletRepository.insertWallet(wallet) } returns Unit
-
-        // When
-        val result = createWalletUseCase(wallet)
-
-        // Then
-        assertTrue(result.isSuccess)
-        coVerify { walletRepository.insertWallet(wallet) }
+    fun `zero and negative initial balances are accepted`() = runTest {
+        createWalletUseCase("Zero", BigDecimal.ZERO, "USD")
+        createWalletUseCase("Overdrawn", BigDecimal("-50"), "USD")
+        coVerify(exactly = 2) { walletRepository.insertWallet(any()) }
     }
 }

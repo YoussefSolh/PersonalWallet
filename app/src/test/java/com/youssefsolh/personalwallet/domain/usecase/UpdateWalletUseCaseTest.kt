@@ -212,9 +212,9 @@ class UpdateWalletUseCaseTest {
     @Test
     fun `invoke should be called multiple times for different wallets`() = runTest {
         // Given
-        val wallet1 = Wallet("w1", "Wallet 1", BigDecimal("100"), "USD", 1L, 1L)
-        val wallet2 = Wallet("w2", "Wallet 2", BigDecimal("200"), "EUR", 1L, 1L)
-        val wallet3 = Wallet("w3", "Wallet 3", BigDecimal("300"), "GBP", 1L, 1L)
+        val wallet1 = Wallet(id = "w1", name = "Wallet 1", balance = BigDecimal("100"), currency = "USD", createdAt = 1L, updatedAt = 1L)
+        val wallet2 = Wallet(id = "w2", name = "Wallet 2", balance = BigDecimal("200"), currency = "EUR", createdAt = 1L, updatedAt = 1L)
+        val wallet3 = Wallet(id = "w3", name = "Wallet 3", balance = BigDecimal("300"), currency = "GBP", createdAt = 1L, updatedAt = 1L)
 
         coEvery { walletRepository.updateWallet(any()) } returns Unit
 

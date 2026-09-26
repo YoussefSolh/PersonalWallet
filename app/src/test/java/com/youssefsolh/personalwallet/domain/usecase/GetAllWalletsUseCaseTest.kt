@@ -112,9 +112,9 @@ class GetAllWalletsUseCaseTest {
     fun `invoke should return wallets with different currencies`() = runTest {
         // Given
         val wallets = listOf(
-            Wallet("w1", "USD Wallet", BigDecimal("1000"), "USD", 1L, 1L),
-            Wallet("w2", "EUR Wallet", BigDecimal("500"), "EUR", 1L, 1L),
-            Wallet("w3", "GBP Wallet", BigDecimal("750"), "GBP", 1L, 1L)
+            Wallet(id = "w1", name = "USD Wallet", balance = BigDecimal("1000"), currency = "USD", createdAt = 1L, updatedAt = 1L),
+            Wallet(id = "w2", name = "EUR Wallet", balance = BigDecimal("500"), currency = "EUR", createdAt = 1L, updatedAt = 1L),
+            Wallet(id = "w3", name = "GBP Wallet", balance = BigDecimal("750"), currency = "GBP", createdAt = 1L, updatedAt = 1L)
         )
         coEvery { walletRepository.getAllWallets() } returns flowOf(wallets)
 
@@ -134,9 +134,9 @@ class GetAllWalletsUseCaseTest {
     fun `invoke should handle wallets with zero and negative balances`() = runTest {
         // Given
         val wallets = listOf(
-            Wallet("w1", "Zero Wallet", BigDecimal.ZERO, "USD", 1L, 1L),
-            Wallet("w2", "Negative Wallet", BigDecimal("-100"), "USD", 1L, 1L),
-            Wallet("w3", "Positive Wallet", BigDecimal("500"), "USD", 1L, 1L)
+            Wallet(id = "w1", name = "Zero Wallet", balance = BigDecimal.ZERO, currency = "USD", createdAt = 1L, updatedAt = 1L),
+            Wallet(id = "w2", name = "Negative Wallet", balance = BigDecimal("-100"), currency = "USD", createdAt = 1L, updatedAt = 1L),
+            Wallet(id = "w3", name = "Positive Wallet", balance = BigDecimal("500"), currency = "USD", createdAt = 1L, updatedAt = 1L)
         )
         coEvery { walletRepository.getAllWallets() } returns flowOf(wallets)
 
@@ -158,11 +158,11 @@ class GetAllWalletsUseCaseTest {
     fun `invoke should emit multiple updates when repository emits`() = runTest {
         // Given - Simulate repository emitting updates
         val initialWallets = listOf(
-            Wallet("w1", "Wallet 1", BigDecimal("1000"), "USD", 1L, 1L)
+            Wallet(id = "w1", name = "Wallet 1", balance = BigDecimal("1000"), currency = "USD", createdAt = 1L, updatedAt = 1L)
         )
         val updatedWallets = listOf(
-            Wallet("w1", "Wallet 1", BigDecimal("1500"), "USD", 1L, 2L),
-            Wallet("w2", "Wallet 2", BigDecimal("500"), "USD", 1L, 1L)
+            Wallet(id = "w1", name = "Wallet 1", balance = BigDecimal("1500"), currency = "USD", createdAt = 1L, updatedAt = 2L),
+            Wallet(id = "w2", name = "Wallet 2", balance = BigDecimal("500"), currency = "USD", createdAt = 1L, updatedAt = 1L)
         )
 
         coEvery { walletRepository.getAllWallets() } returns flowOf(initialWallets, updatedWallets)
@@ -187,9 +187,9 @@ class GetAllWalletsUseCaseTest {
     fun `invoke should preserve wallet ordering from repository`() = runTest {
         // Given
         val wallets = listOf(
-            Wallet("w3", "Third", BigDecimal("300"), "USD", 3L, 3L),
-            Wallet("w1", "First", BigDecimal("100"), "USD", 1L, 1L),
-            Wallet("w2", "Second", BigDecimal("200"), "USD", 2L, 2L)
+            Wallet(id = "w3", name = "Third", balance = BigDecimal("300"), currency = "USD", createdAt = 3L, updatedAt = 3L),
+            Wallet(id = "w1", name = "First", balance = BigDecimal("100"), currency = "USD", createdAt = 1L, updatedAt = 1L),
+            Wallet(id = "w2", name = "Second", balance = BigDecimal("200"), currency = "USD", createdAt = 2L, updatedAt = 2L)
         )
         coEvery { walletRepository.getAllWallets() } returns flowOf(wallets)
 

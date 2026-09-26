@@ -2,8 +2,9 @@ package com.youssefsolh.personalwallet.data.repository
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.youssefsolh.personalwallet.data.local.CurrentUserProvider
 import com.youssefsolh.personalwallet.data.local.dao.WalletDao
-import com.youssefsolh.personalwallet.data.local.entity.WalletEntity
+import com.youssefsolh.personalwallet.data.local.entity.WalletWithCurrencySymbol
 import com.youssefsolh.personalwallet.domain.model.Wallet
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -22,16 +23,22 @@ class WalletRepositoryImplTest {
 
     private lateinit var repository: WalletRepositoryImpl
     private val walletDao: WalletDao = mockk()
+    private val currentUserProvider: CurrentUserProvider = mockk()
 
-    private val testWalletEntity = WalletEntity(
-        id = "wallet1",
-        name = "Test Wallet",
-        balance = "1000.00",
-        currency = "USD",
-        createdAt = 1234567890L,
-        updatedAt = 1234567890L,
-        isDeleted = false
-    )
+    private fun row(id: String, name: String, balance: String, currency: String, createdAt: Long, updatedAt: Long) =
+        WalletWithCurrencySymbol(
+            id = id,
+            userId = USER_ID,
+            name = name,
+            balance = balance,
+            currency = currency,
+            currencySymbol = if (currency == "USD") "$" else null,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            isDeleted = false
+        )
+
+    private val testWalletEntity = row("wallet1", "Test Wallet", "1000.00", "USD", 1234567890L, 1234567890L)
 
     private val testWallet = Wallet(
         id = "wallet1",
@@ -44,14 +51,19 @@ class WalletRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = WalletRepositoryImpl(walletDao)
+        coEvery { currentUserProvider.getCurrentUserId() } returns USER_ID
+        repository = WalletRepositoryImpl(walletDao, currentUserProvider)
+    }
+
+    companion object {
+        private const val USER_ID = "user1"
     }
 
     @Test
     fun `getAllWallets should return flow of domain wallets`() = runTest {
         // Given
         val entities = listOf(testWalletEntity)
-        coEvery { walletDao.getAllWallets() } returns flowOf(entities)
+        coEvery { walletDao.getAllWallets(USER_ID) } returns flowOf(entities)
 
         // When
         repository.getAllWallets().test {
@@ -71,7 +83,7 @@ class WalletRepositoryImplTest {
     @Test
     fun `getAllWallets should handle empty list`() = runTest {
         // Given
-        coEvery { walletDao.getAllWallets() } returns flowOf(emptyList())
+        coEvery { walletDao.getAllWallets(USER_ID) } returns flowOf(emptyList())
 
         // When
         repository.getAllWallets().test {
@@ -87,7 +99,7 @@ class WalletRepositoryImplTest {
     @Test
     fun `getWalletById should return domain wallet when exists`() = runTest {
         // Given
-        coEvery { walletDao.getWalletById("wallet1") } returns testWalletEntity
+        coEvery { walletDao.getWalletById("wallet1", USER_ID) } returns testWalletEntity
 
         // When
         val wallet = repository.getWalletById("wallet1")
@@ -102,7 +114,7 @@ class WalletRepositoryImplTest {
     @Test
     fun `getWalletById should return null when wallet does not exist`() = runTest {
         // Given
-        coEvery { walletDao.getWalletById("nonexistent") } returns null
+        coEvery { walletDao.getWalletById("nonexistent", USER_ID) } returns null
 
         // When
         val wallet = repository.getWalletById("nonexistent")
@@ -168,7 +180,7 @@ class WalletRepositoryImplTest {
     @Test
     fun `getWalletBalance should return flow of BigDecimal`() = runTest {
         // Given
-        coEvery { walletDao.getWalletBalance("wallet1") } returns flowOf("1500.50")
+        coEvery { walletDao.getWalletBalance("wallet1", USER_ID) } returns flowOf("1500.50")
 
         // When
         repository.getWalletBalance("wallet1").test {
@@ -185,11 +197,11 @@ class WalletRepositoryImplTest {
     fun `getAllWallets should map multiple entities correctly`() = runTest {
         // Given
         val entities = listOf(
-            WalletEntity("w1", "Wallet 1", "100", "USD", 1L, 1L, false),
-            WalletEntity("w2", "Wallet 2", "200", "EUR", 2L, 2L, false),
-            WalletEntity("w3", "Wallet 3", "300.50", "GBP", 3L, 3L, false)
+            row("w1", "Wallet 1", "100", "USD", 1L, 1L),
+            row("w2", "Wallet 2", "200", "EUR", 2L, 2L),
+            row("w3", "Wallet 3", "300.50", "GBP", 3L, 3L)
         )
-        coEvery { walletDao.getAllWallets() } returns flowOf(entities)
+        coEvery { walletDao.getAllWallets(USER_ID) } returns flowOf(entities)
 
         // When
         repository.getAllWallets().test {
@@ -269,7 +281,7 @@ class WalletRepositoryImplTest {
     @Test
     fun `getWalletBalance should handle zero balance`() = runTest {
         // Given
-        coEvery { walletDao.getWalletBalance("wallet1") } returns flowOf("0")
+        coEvery { walletDao.getWalletBalance("wallet1", USER_ID) } returns flowOf("0")
 
         // When
         repository.getWalletBalance("wallet1").test {
@@ -285,7 +297,7 @@ class WalletRepositoryImplTest {
     @Test
     fun `getWalletBalance should handle negative balance`() = runTest {
         // Given
-        coEvery { walletDao.getWalletBalance("wallet1") } returns flowOf("-50.25")
+        coEvery { walletDao.getWalletBalance("wallet1", USER_ID) } returns flowOf("-50.25")
 
         // When
         repository.getWalletBalance("wallet1").test {

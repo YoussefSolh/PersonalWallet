@@ -35,12 +35,13 @@ class BackupDataUseCaseTest {
 
     private val testTransaction = Transaction(
         id = "tx1",
-        walletId = "wallet1",
+        fromWalletId = "wallet1",
+        toWalletId = null,
         amount = BigDecimal("50.00"),
         type = TransactionType.EXPENSE,
-        category = "Food",
+        categoryId = "Food",
         description = "Lunch",
-        date = 1234567890L,
+        timestamp = 1234567890L,
         createdAt = 1234567890L,
         updatedAt = 1234567890L
     )
@@ -50,6 +51,7 @@ class BackupDataUseCaseTest {
         name = "Food",
         color = "#FF0000",
         icon = "food",
+        type = TransactionType.EXPENSE,
         createdAt = 1234567890L
     )
 
@@ -194,12 +196,13 @@ class BackupDataUseCaseTest {
             transactions = List(1000) { index ->
                 Transaction(
                     id = "tx$index",
-                    walletId = "wallet${index % 100}",
+                    fromWalletId = "wallet${index % 100}",
+                    toWalletId = null,
                     amount = BigDecimal("50.00"),
                     type = if (index % 2 == 0) TransactionType.EXPENSE else TransactionType.INCOME,
-                    category = "Category",
+                    categoryId = "Category",
                     description = "Transaction $index",
-                    date = 1234567890L,
+                    timestamp = 1234567890L,
                     createdAt = 1234567890L,
                     updatedAt = 1234567890L
                 )
@@ -210,6 +213,7 @@ class BackupDataUseCaseTest {
                     name = "Category $index",
                     color = "#FF0000",
                     icon = "icon$index",
+                    type = TransactionType.EXPENSE,
                     createdAt = 1234567890L
                 )
             }

@@ -3,9 +3,13 @@ package com.youssefsolh.personalwallet.presentation.viewmodel
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.youssefsolh.personalwallet.domain.model.Currency
 import com.youssefsolh.personalwallet.domain.model.Wallet
+import com.youssefsolh.personalwallet.domain.repository.AuthRepository
+import com.youssefsolh.personalwallet.domain.repository.CurrencyRepository
 import com.youssefsolh.personalwallet.domain.usecase.GetAllWalletsUseCase
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,10 +37,17 @@ class WalletListViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var viewModel: WalletListViewModel
     private val getAllWalletsUseCase: GetAllWalletsUseCase = mockk()
+    private val authRepository: AuthRepository = mockk()
+    private val currencyRepository: CurrencyRepository = mockk()
+
+    private val usd = Currency(code = "USD", name = "US Dollar", symbol = "$", isDefault = true)
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        every { authRepository.getCurrentUser() } returns flowOf(null)
+        every { currencyRepository.getAllCurrencies() } returns flowOf(listOf(usd))
+        every { currencyRepository.getDefaultCurrency() } returns flowOf(usd)
     }
 
     @After
@@ -50,7 +61,7 @@ class WalletListViewModelTest {
         coEvery { getAllWalletsUseCase() } returns flowOf(emptyList())
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
 
         // Then - initial state should have loading = true
         val initialState = viewModel.uiState.value
@@ -84,7 +95,7 @@ class WalletListViewModelTest {
         coEvery { getAllWalletsUseCase() } returns flowOf(wallets)
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
@@ -128,7 +139,7 @@ class WalletListViewModelTest {
         coEvery { getAllWalletsUseCase() } returns flowOf(wallets)
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
@@ -142,7 +153,7 @@ class WalletListViewModelTest {
         coEvery { getAllWalletsUseCase() } returns flowOf(emptyList())
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
@@ -159,7 +170,7 @@ class WalletListViewModelTest {
         coEvery { getAllWalletsUseCase() } throws Exception(errorMessage)
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
@@ -208,7 +219,7 @@ class WalletListViewModelTest {
         )
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Verify initial state
@@ -241,7 +252,7 @@ class WalletListViewModelTest {
         coEvery { getAllWalletsUseCase() } returns flowOf(wallets)
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
 
         // Then - Use Turbine to test Flow emissions
         viewModel.uiState.test {
@@ -281,7 +292,7 @@ class WalletListViewModelTest {
         coEvery { getAllWalletsUseCase() } returns flowOf(wallets)
 
         // When
-        viewModel = WalletListViewModel(getAllWalletsUseCase)
+        viewModel = WalletListViewModel(getAllWalletsUseCase, authRepository, currencyRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then

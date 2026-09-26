@@ -2,6 +2,7 @@ package com.youssefsolh.personalwallet.domain.usecase
 
 import com.google.common.truth.Truth.assertThat
 import com.youssefsolh.personalwallet.data.local.dao.CategorySpendingEntity
+import com.youssefsolh.personalwallet.data.local.CurrentUserProvider
 import com.youssefsolh.personalwallet.data.local.dao.TransactionDao
 import com.youssefsolh.personalwallet.domain.model.Category
 import com.youssefsolh.personalwallet.domain.model.TransactionType
@@ -22,19 +23,23 @@ class GetSpendingByCategoryUseCaseTest {
 
     private lateinit var getSpendingByCategoryUseCase: GetSpendingByCategoryUseCase
     private val transactionDao: TransactionDao = mockk()
+    private val currentUserProvider: CurrentUserProvider = mockk {
+        coEvery { getCurrentUserId() } returns "user1"
+    }
     private val categoryRepository: CategoryRepository = mockk()
 
     private val categories = listOf(
-        Category("cat1", "Food", "🍔", 0xFF0000, TransactionType.EXPENSE),
-        Category("cat2", "Transport", "🚗", 0x00FF00, TransactionType.EXPENSE),
-        Category("cat3", "Shopping", "🛍️", 0x0000FF, TransactionType.EXPENSE)
+        Category("cat1", "Food", "🍔", "#FF0000", TransactionType.EXPENSE),
+        Category("cat2", "Transport", "🚗", "#00FF00", TransactionType.EXPENSE),
+        Category("cat3", "Shopping", "🛍️", "#0000FF", TransactionType.EXPENSE)
     )
 
     @Before
     fun setup() {
         getSpendingByCategoryUseCase = GetSpendingByCategoryUseCase(
             transactionDao = transactionDao,
-            categoryRepository = categoryRepository
+            categoryRepository = categoryRepository,
+            currentUserProvider = currentUserProvider
         )
     }
 
@@ -50,7 +55,7 @@ class GetSpendingByCategoryUseCaseTest {
         )
         // Total = 1000, percentages: 50%, 30%, 20%
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -92,7 +97,7 @@ class GetSpendingByCategoryUseCaseTest {
             CategorySpendingEntity("unknown", 100.0, 1)
         )
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -112,7 +117,7 @@ class GetSpendingByCategoryUseCaseTest {
         val startDate = 0L
         val endDate = 1000L
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns emptyList()
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns emptyList()
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -132,7 +137,7 @@ class GetSpendingByCategoryUseCaseTest {
             CategorySpendingEntity("cat1", 0.0, 0)
         )
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -154,7 +159,7 @@ class GetSpendingByCategoryUseCaseTest {
             CategorySpendingEntity("cat1", 500.0, 10)
         )
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -178,7 +183,7 @@ class GetSpendingByCategoryUseCaseTest {
         )
         // Total = 802.0
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -203,7 +208,7 @@ class GetSpendingByCategoryUseCaseTest {
         )
         // Total = 1000.0
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -223,7 +228,7 @@ class GetSpendingByCategoryUseCaseTest {
         val endDate = 1000L
         val exception = RuntimeException("Database error")
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } throws exception
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } throws exception
 
         // When
         val result = getSpendingByCategoryUseCase(startDate, endDate)
@@ -241,7 +246,7 @@ class GetSpendingByCategoryUseCaseTest {
         val spendingData = listOf(CategorySpendingEntity("cat1", 100.0, 1))
         val exception = RuntimeException("Repository error")
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } throws exception
 
         // When
@@ -262,7 +267,7 @@ class GetSpendingByCategoryUseCaseTest {
             CategorySpendingEntity("cat2", 500.0, 1000)
         )
 
-        coEvery { transactionDao.getSpendingByCategory(startDate, endDate) } returns spendingData
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate, endDate) } returns spendingData
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When
@@ -286,8 +291,8 @@ class GetSpendingByCategoryUseCaseTest {
         val spendingData1 = listOf(CategorySpendingEntity("cat1", 100.0, 1))
         val spendingData2 = listOf(CategorySpendingEntity("cat2", 200.0, 2))
 
-        coEvery { transactionDao.getSpendingByCategory(startDate1, endDate1) } returns spendingData1
-        coEvery { transactionDao.getSpendingByCategory(startDate2, endDate2) } returns spendingData2
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate1, endDate1) } returns spendingData1
+        coEvery { transactionDao.getSpendingByCategory("user1", startDate2, endDate2) } returns spendingData2
         coEvery { categoryRepository.getAllCategories() } returns flowOf(categories)
 
         // When

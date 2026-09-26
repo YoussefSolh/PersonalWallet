@@ -27,8 +27,8 @@ class GetActiveDebtsUseCaseTest {
     fun `invoke should return debt transactions`() = runTest {
         // Given
         val debts = listOf(
-            Transaction("tx1", "w1", null, "cat1", BigDecimal("100"), "Debt 1", 1L, TransactionType.EXPENSE, false),
-            Transaction("tx2", "w1", null, "cat1", BigDecimal("200"), "Debt 2", 1L, TransactionType.EXPENSE, false)
+            Transaction(id = "tx1", fromWalletId = "w1", toWalletId = null, categoryId = "cat1", amount = BigDecimal("100"), description = "Debt 1", timestamp = 1L, type = TransactionType.EXPENSE, isDebt = true),
+            Transaction(id = "tx2", fromWalletId = "w1", toWalletId = null, categoryId = "cat1", amount = BigDecimal("200"), description = "Debt 2", timestamp = 1L, type = TransactionType.EXPENSE, isDebt = true)
         )
         coEvery { transactionRepository.getDebtTransactions() } returns flowOf(debts)
 

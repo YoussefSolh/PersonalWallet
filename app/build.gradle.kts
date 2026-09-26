@@ -50,21 +50,6 @@ android {
             isReturnDefaultValues = true
             all {
                 it.jvmArgs("-Xmx2048m")
-                // Temporarily exclude failing tests until they can be updated
-                it.exclude(
-                    "**/BackupRepositoryImplTest.class",
-                    "**/WalletRepositoryImplTest.class",
-                    "**/BackupDataUseCaseTest.class",
-                    "**/CreateCategoryUseCaseTest.class",
-                    "**/CreateTransactionUseCaseTest.class",
-                    "**/CreateWalletUseCaseTest.class",
-                    "**/GetCategoriesUseCaseTest.class",
-                    "**/GetTransactionsUseCaseTest.class",
-                    "**/GetWalletsUseCaseTest.class",
-                    "**/UpdateCategoryUseCaseTest.class",
-                    "**/UpdateTransactionUseCaseTest.class",
-                    "**/UpdateWalletUseCaseTest.class"
-                )
             }
         }
     }

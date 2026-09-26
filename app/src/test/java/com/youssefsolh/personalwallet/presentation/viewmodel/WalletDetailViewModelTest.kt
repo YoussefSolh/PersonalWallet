@@ -61,7 +61,7 @@ class WalletDetailViewModelTest {
         id = "cat1",
         name = "Food",
         icon = "🍔",
-        color = 0xFF0000,
+        color = "#FF0000",
         type = TransactionType.EXPENSE
     )
 
@@ -113,7 +113,7 @@ class WalletDetailViewModelTest {
         // Given
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered("wallet1", null, null)
+            transactionRepository.getTransactionsByWalletFiltered(walletId = "wallet1", type = null, searchQuery = null)
         } returns flowOf(listOf(testTransaction))
         coEvery { categoryRepository.getCategoryById("cat1") } returns testCategory
 
@@ -152,10 +152,10 @@ class WalletDetailViewModelTest {
         // Given
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered("wallet1", null, null)
+            transactionRepository.getTransactionsByWalletFiltered(walletId = "wallet1", type = null, searchQuery = null)
         } returns flowOf(listOf(testTransaction))
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered("wallet1", null, "Lunch")
+            transactionRepository.getTransactionsByWalletFiltered(walletId = "wallet1", type = null, searchQuery = "Lunch")
         } returns flowOf(listOf(testTransaction))
         coEvery { categoryRepository.getCategoryById("cat1") } returns testCategory
 
@@ -174,7 +174,7 @@ class WalletDetailViewModelTest {
         val state = viewModel.uiState.value
         assertThat(state.searchQuery).isEqualTo("Lunch")
         coVerify {
-            transactionRepository.getTransactionsByWalletFiltered("wallet1", null, "Lunch")
+            transactionRepository.getTransactionsByWalletFiltered(walletId = "wallet1", type = null, searchQuery = "Lunch")
         }
     }
 
@@ -183,10 +183,10 @@ class WalletDetailViewModelTest {
         // Given
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered("wallet1", null, null)
+            transactionRepository.getTransactionsByWalletFiltered(walletId = "wallet1", type = null, searchQuery = null)
         } returns flowOf(listOf(testTransaction))
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered("wallet1", TransactionType.EXPENSE, null)
+            transactionRepository.getTransactionsByWalletFiltered(walletId = "wallet1", type = TransactionType.EXPENSE, searchQuery = null)
         } returns flowOf(listOf(testTransaction))
         coEvery { categoryRepository.getCategoryById("cat1") } returns testCategory
 
@@ -202,7 +202,7 @@ class WalletDetailViewModelTest {
         val state = viewModel.uiState.value
         assertThat(state.filterType).isEqualTo(TransactionType.EXPENSE)
         coVerify {
-            transactionRepository.getTransactionsByWalletFiltered("wallet1", TransactionType.EXPENSE, null)
+            transactionRepository.getTransactionsByWalletFiltered(walletId = "wallet1", type = TransactionType.EXPENSE, searchQuery = null)
         }
     }
 
@@ -211,7 +211,7 @@ class WalletDetailViewModelTest {
         // Given
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any())
+            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any(), any(), any(), any())
         } returns flowOf(emptyList())
         coEvery { deleteTransactionUseCase(testTransaction) } returns Result.success(Unit)
 
@@ -235,7 +235,7 @@ class WalletDetailViewModelTest {
         val errorMessage = "Failed to delete"
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any())
+            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any(), any(), any(), any())
         } returns flowOf(emptyList())
         coEvery { deleteTransactionUseCase(testTransaction) } returns Result.failure(Exception(errorMessage))
 
@@ -257,7 +257,7 @@ class WalletDetailViewModelTest {
         // Given
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any())
+            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any(), any(), any(), any())
         } returns flowOf(emptyList())
 
         // Load wallet first
@@ -277,7 +277,7 @@ class WalletDetailViewModelTest {
         // Given - State with wallet but no transactions
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any())
+            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any(), any(), any(), any())
         } returns flowOf(emptyList())
 
         viewModel.loadWallet("wallet1")
@@ -304,7 +304,7 @@ class WalletDetailViewModelTest {
 
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any())
+            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any(), any(), any(), any())
         } returns flowOf(listOf(testTransaction))
         coEvery { categoryRepository.getCategoryById("cat1") } returns testCategory
 
@@ -349,7 +349,7 @@ class WalletDetailViewModelTest {
 
         coEvery { walletRepository.getWalletById("wallet1") } returns testWallet
         coEvery {
-            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any())
+            transactionRepository.getTransactionsByWalletFiltered(any(), any(), any(), any(), any(), any())
         } returns flowOf(listOf(testTransaction))
         coEvery { categoryRepository.getCategoryById("cat1") } returns testCategory
         every {
